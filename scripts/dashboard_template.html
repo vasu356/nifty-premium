@@ -1,0 +1,452 @@
+<title>Nifty Premium Decay Backtest</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a single reading column of report sections; summary verdict first, then evidence, then the full table. */
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --ink: #111418; --ink-2: #4b5260; --muted: #7c8391;
+  --line: #e3e6eb; --axis: #c4c9d1; --accent: #2a5bd7;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a;
+  --pos: #2a78d6; --neg: #d6403f; --pos-bg: rgba(42,120,214,.14); --neg-bg: rgba(214,64,63,.14); --mid: #eef0f3;
+  --good: #0c7d0c; --bad: #c33232;
+  --f-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1114; --surface: #171a1f; --ink: #eef0f3; --ink-2: #b9bfc9; --muted: #8a919c;
+  --line: #262a31; --axis: #3a404a; --accent: #7aa2ff;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+  --pos: #5b9cf0; --neg: #ec6a6a; --pos-bg: rgba(91,156,240,.20); --neg-bg: rgba(236,106,106,.20); --mid: #1e2228;
+  --good: #3cc23c; --bad: #ef7070; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0f1114; --surface: #171a1f; --ink: #eef0f3; --ink-2: #b9bfc9; --muted: #8a919c;
+  --line: #262a31; --axis: #3a404a; --accent: #7aa2ff;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+  --pos: #5b9cf0; --neg: #ec6a6a; --pos-bg: rgba(91,156,240,.20); --neg-bg: rgba(236,106,106,.20); --mid: #1e2228;
+  --good: #3cc23c; --bad: #ef7070; color-scheme: dark; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+.heat th { text-align: center; } .heat th.txt { text-align: left; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.55; margin: 0; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-block: 28px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 28px; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; letter-spacing: -.01em; }
+h1 { font-size: clamp(28px, 4.4vw, 42px); line-height: 1.1; }
+h2 { font-size: 22px; }
+h3 { font-size: 15px; font-weight: 600; }
+p { margin: 0; max-width: 70ch; }
+.eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.lede { color: var(--ink-2); font-size: 16px; }
+header { display: grid; gap: 12px; }
+section { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 22px; display: grid; gap: 16px; min-width: 0; }
+.sec-head { display: grid; gap: 6px; }
+.sec-head p { color: var(--ink-2); font-size: 14px; }
+.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.pos { color: var(--pos); } .neg { color: var(--neg); }
+.verdicts { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.verdict { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 10px; align-content: start; }
+.verdict .tag { font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.verdict .name { font-weight: 600; font-size: 14px; color: var(--ink-2); min-height: 2.6em; }
+.verdict .big { font-family: var(--f-display); font-size: 34px; font-weight: 600; line-height: 1; }
+.verdict .big small { font-size: 14px; color: var(--muted); font-family: var(--f-body); font-weight: 500; margin-left: 4px; }
+.kv { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; font-size: 13px; }
+.kv dt { color: var(--ink-2); } .kv dd { margin: 0; text-align: right; font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.findings { display: grid; gap: 8px; padding-left: 20px; margin: 0; color: var(--ink); }
+.findings li { max-width: 80ch; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: end; }
+.controls label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); min-width: 0; flex: 1 1 240px; max-width: 420px; }
+select { font: inherit; font-size: 14px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 7px 8px; width: 100%; }
+select:focus-visible, button:focus-visible, th:focus-visible, tr:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+.legend i.box { height: 10px; width: 10px; border-radius: 2px; }
+.chart { position: relative; width: 100%; min-width: 0; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart text { font-family: var(--f-mono); font-size: 11px; fill: var(--muted); }
+.chart .lbl { fill: var(--ink-2); font-family: var(--f-body); font-size: 12px; }
+.grid-line { stroke: var(--line); stroke-width: 1; }
+.zero-line { stroke: var(--axis); stroke-width: 1; }
+.tip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.12); padding: 8px 10px; font-size: 12px; min-width: 150px; z-index: 5; display: grid; gap: 3px; }
+.tip .t-h { color: var(--muted); font-family: var(--f-mono); font-size: 11px; }
+.tip .t-r { display: grid; grid-template-columns: 14px auto 1fr; gap: 6px; align-items: center; }
+.tip .t-r i { height: 3px; border-radius: 2px; }
+.tip .t-r b { font-family: var(--f-mono); font-weight: 500; color: var(--ink); }
+.tip .t-r span { color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+.two > div { display: grid; gap: 8px; min-width: 0; align-content: start; }
+.note { font-size: 12.5px; color: var(--muted); }
+.scroll { overflow-x: auto; min-width: 0; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { padding: 7px 8px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font-weight: 600; color: var(--ink-2); font-size: 12px; position: sticky; top: 0; background: var(--surface); }
+th.sortable { cursor: pointer; user-select: none; }
+th.sortable:hover { color: var(--ink); }
+th[aria-sort="descending"]::after { content: " ↓"; } th[aria-sort="ascending"]::after { content: " ↑"; }
+td.txt, th.txt { text-align: left; }
+td.num, th.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+tbody tr { cursor: pointer; }
+tbody tr:hover td { background: var(--mid); }
+tr.is-user td:first-child { box-shadow: inset 3px 0 0 var(--s1); }
+.strat-name { white-space: normal; min-width: 220px; max-width: 340px; text-align: left; }
+.strat-name small { display: block; color: var(--muted); font-size: 11.5px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: inherit; font-size: 12.5px; border: 1px solid var(--line); background: var(--bg); color: var(--ink-2); border-radius: 999px; padding: 4px 11px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.heat td.cell { font-family: var(--f-mono); text-align: center; }
+.heat td.cell small { display: block; font-size: 10.5px; color: var(--muted); }
+.stats { display: flex; flex-wrap: wrap; gap: 8px; }
+.stat { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; display: grid; gap: 2px; min-width: 110px; }
+.stat b { font-family: var(--f-display); font-size: 20px; } .stat span { font-size: 12px; color: var(--muted); }
+.method { display: grid; gap: 10px; font-size: 14px; color: var(--ink-2); }
+.method ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.pill { display: inline-block; font-size: 11px; font-family: var(--f-mono); padding: 1px 7px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-2); }
+.pill.ok { color: var(--good); border-color: currentColor; } .pill.no { color: var(--bad); border-color: currentColor; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow" id="period"></div>
+    <h1>Nifty Premium Decay Backtest</h1>
+    <p class="lede">Selling short-dated Nifty 50 options overnight and buying them back the next day, tested on every trading day of real NSE closing prices, after slippage, brokerage, STT, exchange charges and GST.</p>
+  </header>
+
+  <div class="verdicts" id="verdicts"></div>
+
+  <section id="sec-findings">
+    <div class="sec-head"><h2>What the data says</h2></div>
+    <ul class="findings" id="findings"></ul>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>Cumulative net profit</h2>
+      <p>Points per unit after all costs. Multiply by lot size for rupees (current lot: <span id="lotnote"></span> units). Pick any two strategies to compare with yours, or click a row in the table at the bottom.</p>
+    </div>
+    <div class="controls">
+      <label for="cmpB">Compare with<select id="cmpB"></select></label>
+      <label for="cmpC">and<select id="cmpC"></select></label>
+    </div>
+    <div class="legend" id="eqLegend"></div>
+    <div class="chart" id="eqChart"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>Year by year</h2><p>Net points per calendar year for the three strategies above. A strategy you can live with should be positive in most years, not just in total.</p></div>
+    <div class="legend" id="yrLegend"></div>
+    <div class="chart" id="yrChart"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>Where your strategy makes and loses money</h2><p>Your strategy's trades, split by how far away expiry was at entry and by how much Nifty moved overnight.</p></div>
+    <div class="two">
+      <div><h3>By trading days to expiry at entry</h3><div class="chart" id="dteChart"></div><p class="note">1 = expiry is the next trading day. Bars show total net points; labels show trades and win rate.</p></div>
+      <div><h3>By size of the next-day Nifty move</h3><div class="chart" id="moveChart"></div><p class="note">Absolute close-to-close move in points from entry day to exit day.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>Robustness: premium level × days to expiry</h2><p>Total net points for an overnight strangle at each premium level, entered only on the days shown. The small figure shows how many years were profitable. A good idea should work across nearby settings, not only at one lucky cell.</p></div>
+    <div class="scroll"><table class="heat" id="gridTable"></table></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>How much do costs matter?</h2><p>Total net points under different slippage assumptions (points lost per order per leg), with ₹20 brokerage per order. Gross decay does not change; only what you keep does.</p></div>
+    <div class="scroll"><table id="costTable"></table></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>How far does Nifty move in a day?</h2><p id="distNote"></p></div>
+    <div class="stats" id="withinStats"></div>
+    <div class="chart" id="distChart"></div>
+    <details><summary>All 28 ranges ranked by likelihood</summary><div class="scroll"><table id="distTable"></table></div></details>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>All strategies</h2><p>Click a column to sort. Click a row to put that strategy on the charts above. Points per unit after costs; ₹ per lot uses the current lot of <span class="lotn"></span>.</p></div>
+    <div class="chips" id="groupChips"></div>
+    <div class="scroll" style="max-height: 640px; overflow: auto;"><table id="allTable"></table></div>
+  </section>
+
+  <section class="method">
+    <div class="sec-head"><h2>Method and assumptions</h2></div>
+    <ul>
+      <li><b>Data:</b> NSE F&amp;O bhavcopies (end-of-day close per contract) and NSE daily index closes. <span id="mDays"></span> One missing bhavcopy (30 Mar 2021) was filled from NSE's market-activity report.</li>
+      <li><b>Entry:</b> at the day's closing price, nearest weekly expiry, out-of-the-money strikes that traded at least one contract that day. Strike chosen with the close nearest the premium target inside the band.</li>
+      <li><b>Exit:</b> next trading day's close. If the next day is expiry, the option settles at intrinsic value against the Nifty close (no closing order, no slippage).</li>
+      <li><b>Costs per leg:</b> 0.5 pt slippage per order, ₹20 brokerage per order, STT on sell premium (0.0625% before Oct 2024, 0.1% after; 0.125% on exercised long options), exchange charges (0.05% / 0.0353%), SEBI fee, stamp duty 0.003% on buys, 18% GST on brokerage and charges. Brokerage is divided by the lot size in force on that day (<span id="lotHist"></span>).</li>
+      <li><b>Stops:</b> checked against the next day's high. If the day opened above the stop, the fill is the open price. The "exact fill" variant assumes a perfect fill at the stop and is shown only to illustrate how much gaps cost.</li>
+      <li><b>Not modelled:</b> intraday entry/exit timing, bid-ask spread beyond the slippage assumption, margin and its funding cost, taxes on profits. Closing prices for thinly traded strikes can be stale.</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+const DATA = /*__DATA__*/null;
+(function () {
+  const S = DATA.strategies, byId = Object.fromEntries(S.map(s => [s.sid, s]));
+  const LOT = DATA.refLot, YEARS = DATA.years, DATES = DATA.dates;
+  const $ = (id) => document.getElementById(id);
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+  const h = (tag, cls, text, parent) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; if (parent) parent.appendChild(e); return e; };
+  const nf = new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 });
+  const pts = (v) => (v == null ? "–" : (v > 0 ? "+" : v < 0 ? "−" : "") + nf.format(Math.abs(v)));
+  const rs = (v) => { if (v == null) return "–"; const a = Math.abs(v), s = v < 0 ? "−" : "+"; return a >= 1e5 ? `${s}₹${(a / 1e5).toFixed(2)} L` : `${s}₹${nf.format(a)}`; };
+  const pct = (v) => (v == null ? "–" : (v * 100).toFixed(0) + "%");
+  const sign = (v) => (v > 0 ? "pos" : v < 0 ? "neg" : "");
+  const fmtDate = (d) => new Date(d + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+
+  const user = S.find(s => s.user) || S[0];
+  const allWeather = S.filter(s => s.years_pos === s.years && s.trades > 50 && !s.sid.includes("X")).sort((a, b) => b.net - a.net);
+  const best = allWeather[0] || [...S].sort((a, b) => b.net - a.net)[0];
+  const F = DATA.findings || {};
+  const second = byId[F.compare || ""] || allWeather.find(s => s.sid !== best.sid && s.group !== best.group) || allWeather[1] || S[1];
+  let sel = [user.sid, best.sid, second.sid];
+
+  // ---------- header + verdicts
+  const M = DATA.meta;
+  $("period").textContent = `Nifty 50 weekly options · ${fmtDate(M.first_day)} – ${fmtDate(M.last_day)} · ${nf.format(M.trading_days)} trading days`;
+  $("lotnote").textContent = LOT; document.querySelectorAll(".lotn").forEach(e => e.textContent = LOT);
+  $("mDays").textContent = `${nf.format(M.trading_days)} trading days from ${fmtDate(M.first_day)} to ${fmtDate(M.last_day)}.`;
+  $("lotHist").textContent = Object.entries(M.lot_changes).map(([d, l]) => `${l} from ${fmtDate(d)}`).join(", ");
+
+  const bigMove = DATA.byMove.filter(r => ["150–200", "200–300", "300+"].includes(r.absmove));
+  const bigLoss = bigMove.reduce((a, r) => a + r.net, 0), bigN = bigMove.reduce((a, r) => a + r.trades, 0);
+  function verdict(tag, s, extra) {
+    const v = h("div", "verdict", null, $("verdicts"));
+    h("div", "tag", tag, v); h("div", "name", s.name, v);
+    const b = h("div", "big " + sign(s.net), pts(s.net), v); h("small", null, "pts", b);
+    const dl = h("dl", "kv", null, v);
+    const rows = [["₹ per lot (" + LOT + ")", rs(s.net_rs_per_lot)], ["Trades", nf.format(s.trades)], ["Winning trades", pct(s.win_rate)],
+      ["Profitable years", `${s.years_pos} of ${s.years}`], ["Worst single trade", pts(s.worst) + " pts"], ["Deepest drawdown", pts(s.max_dd) + " pts"]].concat(extra || []);
+    rows.forEach(([k, val]) => { h("dt", null, k, dl); h("dd", null, val, dl); });
+  }
+  verdict("Your strategy", user, [["Gross decay → costs", `${pts(user.gross)} → ${pts(-user.costs)}`]]);
+  verdict("Best all-weather alternative", best);
+  const rv = h("div", "verdict", null, $("verdicts"));
+  h("div", "tag", "Main risk in your strategy", rv); h("div", "name", "Overnight Nifty moves of 150 points or more", rv);
+  const rb = h("div", "big " + sign(bigLoss), pts(bigLoss), rv); h("small", null, "pts", rb);
+  const rdl = h("dl", "kv", null, rv);
+  const small = DATA.byMove.filter(r => !["150–200", "200–300", "300+"].includes(r.absmove));
+  [["Trades on those days", nf.format(bigN)], ["Share of all trades", pct(bigN / user.trades)], ["Net on all other days", pts(small.reduce((a, r) => a + r.net, 0)) + " pts"]]
+    .forEach(([k, val]) => { h("dt", null, k, rdl); h("dd", null, val, rdl); });
+
+  const fl = $("findings");
+  (F.points || []).forEach(t => h("li", null, t, fl));
+  if (!(F.points || []).length) $("sec-findings").hidden = true;
+
+  // ---------- selects
+  const groups = [...new Set(S.map(s => s.group))];
+  function fillSelect(id, idx) {
+    const sEl = $(id); sEl.textContent = "";
+    groups.forEach(g => { const og = h("optgroup", null, null, sEl); og.label = g; S.filter(s => s.group === g).forEach(s => { const o = h("option", null, `${s.name} (${pts(s.net)})`, og); o.value = s.sid; }); });
+    sEl.value = sel[idx];
+    sEl.onchange = () => { sel[idx] = sEl.value; renderAll(); };
+  }
+
+  // ---------- tooltip helper
+  function tipFor(container) {
+    const t = h("div", "tip", null, container); t.hidden = true; return t;
+  }
+  function placeTip(tip, container, x, y) {
+    tip.hidden = false;
+    const cw = container.clientWidth, tw = tip.offsetWidth;
+    let left = x + 14; if (left + tw > cw) left = x - tw - 14; if (left < 0) left = 0;
+    tip.style.left = left + "px"; tip.style.top = Math.max(0, y - 10) + "px";
+  }
+  function tipRows(tip, head, rows) {
+    tip.textContent = ""; h("div", "t-h", head, tip);
+    rows.forEach(([color, name, val]) => { const r = h("div", "t-r", null, tip); const i = h("i", null, null, r); i.style.background = color; h("b", null, val, r); h("span", null, name, r); });
+  }
+  function niceTicks(min, max, n = 5) {
+    const span = max - min || 1, step0 = span / n, mag = Math.pow(10, Math.floor(Math.log10(step0)));
+    const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => span / s <= n) || 10 * mag;
+    const lo = Math.floor(min / step) * step, hi = Math.ceil(max / step) * step, out = [];
+    for (let v = lo; v <= hi + 1e-9; v += step) out.push(Math.round(v * 1e6) / 1e6);
+    return out;
+  }
+  const colors = () => [css("--s1"), css("--s2"), css("--s3")];
+  function legend(id, box) {
+    const L = $(id); L.textContent = ""; const c = colors();
+    sel.forEach((sid, i) => { const sp = h("span", null, null, L); const ic = h("i", box ? "box" : null, null, sp); ic.style.background = c[i]; sp.appendChild(document.createTextNode(byId[sid].name)); });
+  }
+
+  // ---------- equity chart
+  function equityChart() {
+    const box = $("eqChart"); box.textContent = "";
+    const W = Math.max(320, box.clientWidth || 900), H = W < 600 ? 280 : 360, m = { l: 56, r: 16, t: 12, b: 28 };
+    const series = sel.map((sid, i) => { let c = 0; const arr = (DATA.daily[sid] || []).map(v => (c += v)); return { sid, name: byId[sid].name, color: colors()[i], v: arr }; });
+    const n = DATES.length; let lo = 0, hi = 0;
+    series.forEach(s => s.v.forEach(v => { if (v < lo) lo = v; if (v > hi) hi = v; }));
+    const ticks = niceTicks(lo, hi); lo = ticks[0]; hi = ticks[ticks.length - 1];
+    const x = (i) => m.l + (i / (n - 1)) * (W - m.l - m.r), y = (v) => m.t + (hi - v) / (hi - lo) * (H - m.t - m.b);
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Cumulative net points by date" }, box);
+    ticks.forEach(t => { el("line", { x1: m.l, x2: W - m.r, y1: y(t), y2: y(t), class: t === 0 ? "zero-line" : "grid-line" }, svg); el("text", { x: m.l - 8, y: y(t) + 4, "text-anchor": "end" }, svg).textContent = pts(t); });
+    let lastYear = null;
+    DATES.forEach((d, i) => { const yr = d.slice(0, 4); if (yr !== lastYear) { lastYear = yr; el("line", { x1: x(i), x2: x(i), y1: H - m.b, y2: H - m.b + 5, stroke: css("--axis") }, svg); el("text", { x: x(i) + 3, y: H - 8 }, svg).textContent = yr; } });
+    series.slice().reverse().forEach(s => {
+      let d = ""; const step = Math.max(1, Math.floor(n / (W * 1.5)));
+      for (let i = 0; i < n; i += step) d += (i ? "L" : "M") + x(i).toFixed(1) + " " + y(s.v[i]).toFixed(1);
+      d += "L" + x(n - 1).toFixed(1) + " " + y(s.v[n - 1]).toFixed(1);
+      el("path", { d, fill: "none", stroke: s.color, "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
+      el("circle", { cx: x(n - 1), cy: y(s.v[n - 1]), r: 4, fill: s.color, stroke: css("--surface"), "stroke-width": 2 }, svg);
+    });
+    const hair = el("line", { y1: m.t, y2: H - m.b, stroke: css("--axis"), "stroke-width": 1, visibility: "hidden" }, svg);
+    const dots = series.map(s => el("circle", { r: 4, fill: s.color, stroke: css("--surface"), "stroke-width": 2, visibility: "hidden" }, svg));
+    const tip = tipFor(box);
+    const hit = el("rect", { x: m.l, y: m.t, width: W - m.l - m.r, height: H - m.t - m.b, fill: "transparent", tabindex: 0 }, svg);
+    let focusI = n - 1;
+    function show(i) {
+      i = Math.max(0, Math.min(n - 1, i)); focusI = i;
+      hair.setAttribute("x1", x(i)); hair.setAttribute("x2", x(i)); hair.setAttribute("visibility", "visible");
+      series.forEach((s, k) => { dots[k].setAttribute("cx", x(i)); dots[k].setAttribute("cy", y(s.v[i])); dots[k].setAttribute("visibility", "visible"); });
+      tipRows(tip, fmtDate(DATES[i]), series.map(s => [s.color, s.name, pts(s.v[i]) + " pts"]));
+      const r = svg.getBoundingClientRect(), sc = r.width / W;
+      placeTip(tip, box, x(i) * sc, y(series[0].v[i]) * sc);
+    }
+    function hide() { hair.setAttribute("visibility", "hidden"); dots.forEach(d => d.setAttribute("visibility", "hidden")); tip.hidden = true; }
+    hit.addEventListener("pointermove", (e) => { const r = svg.getBoundingClientRect(); const px = (e.clientX - r.left) * W / r.width; show(Math.round((px - m.l) / (W - m.l - m.r) * (n - 1))); });
+    hit.addEventListener("pointerleave", hide); hit.addEventListener("blur", hide);
+    hit.addEventListener("focus", () => show(focusI));
+    hit.addEventListener("keydown", (e) => { if (e.key === "ArrowLeft") show(focusI - 5); if (e.key === "ArrowRight") show(focusI + 5); });
+  }
+
+  // ---------- generic vertical bar chart (signed), groups x series
+  function barChart(boxId, cats, series, opts = {}) {
+    const box = $(boxId); box.textContent = "";
+    const W = Math.max(300, box.clientWidth || 500), H = opts.height || (W < 500 ? 240 : 280), m = { l: 56, r: 8, t: 18, b: opts.bottom || 34 };
+    let lo = 0, hi = 0; series.forEach(s => s.v.forEach(v => { if (v < lo) lo = v; if (v > hi) hi = v; }));
+    const ticks = niceTicks(lo, hi, 4); lo = ticks[0]; hi = ticks[ticks.length - 1];
+    const y = (v) => m.t + (hi - v) / (hi - lo) * (H - m.t - m.b);
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": opts.label || "bar chart" }, box);
+    ticks.forEach(t => { el("line", { x1: m.l, x2: W - m.r, y1: y(t), y2: y(t), class: t === 0 ? "zero-line" : "grid-line" }, svg); el("text", { x: m.l - 8, y: y(t) + 4, "text-anchor": "end" }, svg).textContent = opts.tick ? opts.tick(t) : pts(t); });
+    const gw = (W - m.l - m.r) / cats.length, pad = Math.min(14, gw * .18), bw = Math.min(46, (gw - pad * 2 - 2 * (series.length - 1)) / series.length);
+    const tip = tipFor(box);
+    cats.forEach((c, ci) => {
+      const gx = m.l + ci * gw + (gw - (bw * series.length + 2 * (series.length - 1))) / 2;
+      const lab = el("text", { x: m.l + ci * gw + gw / 2, y: H - m.b + 16, "text-anchor": "middle", class: "lbl" }, svg); lab.textContent = c;
+      if (opts.sub) { const t2 = el("text", { x: m.l + ci * gw + gw / 2, y: H - m.b + 29, "text-anchor": "middle" }, svg); t2.textContent = opts.sub(ci); }
+      series.forEach((s, si) => {
+        const v = s.v[ci]; if (v == null) return;
+        const bx = gx + si * (bw + 2), y0 = y(0), y1 = y(v), top = Math.min(y0, y1), hgt = Math.max(1, Math.abs(y1 - y0)), r = Math.min(4, bw / 2, hgt);
+        const fill = s.colorFn ? s.colorFn(v) : s.color;
+        const d = v >= 0
+          ? `M${bx} ${y0}V${top + r}Q${bx} ${top} ${bx + r} ${top}H${bx + bw - r}Q${bx + bw} ${top} ${bx + bw} ${top + r}V${y0}Z`
+          : `M${bx} ${y0}V${top + hgt - r}Q${bx} ${top + hgt} ${bx + r} ${top + hgt}H${bx + bw - r}Q${bx + bw} ${top + hgt} ${bx + bw} ${top + hgt - r}V${y0}Z`;
+        const p = el("path", { d, fill, tabindex: 0 }, svg);
+        if (opts.valueLabels) { const t = el("text", { x: bx + bw / 2, y: v >= 0 ? top - 5 : top + hgt + 13, "text-anchor": "middle", class: "lbl" }, svg); t.textContent = pts(v); t.style.fontSize = "11px"; }
+        const hitR = el("rect", { x: bx - 3, y: m.t, width: bw + 6, height: H - m.t - m.b, fill: "transparent" }, svg);
+        const on = () => { p.setAttribute("opacity", ".8"); tipRows(tip, c, series.map(ss => [ss.colorFn ? ss.colorFn(ss.v[ci]) : ss.color, ss.name, (opts.fmt || ((x) => pts(x) + " pts"))(ss.v[ci], ci)])); const r2 = svg.getBoundingClientRect(), sc = r2.width / W; placeTip(tip, box, (bx + bw) * sc, top * sc); };
+        const off = () => { p.removeAttribute("opacity"); tip.hidden = true; };
+        [hitR, p].forEach(t => { t.addEventListener("pointermove", on); t.addEventListener("pointerleave", off); });
+        p.addEventListener("focus", on); p.addEventListener("blur", off);
+      });
+    });
+  }
+
+  function yearChart() {
+    const c = colors();
+    barChart("yrChart", YEARS.map(String), sel.map((sid, i) => ({ name: byId[sid].name, color: c[i], v: YEARS.map(y => byId[sid]["y" + y] ?? null) })), { label: "Net points per year" });
+  }
+
+  function breakdowns() {
+    const d = DATA.byDte;
+    barChart("dteChart", d.map(r => String(r.dte)), [{ name: "Net", colorFn: (v) => v >= 0 ? css("--pos") : css("--neg"), v: d.map(r => r.net) }],
+      { sub: (i) => `${d[i].trades} · ${pct(d[i].win_rate)}`, bottom: 40, valueLabels: true, fmt: (v, i) => `${pts(v)} pts · ${d[i].trades} trades · ${pct(d[i].win_rate)} win`, label: "Net by days to expiry" });
+    const mv = DATA.byMove;
+    barChart("moveChart", mv.map(r => r.absmove), [{ name: "Net", colorFn: (v) => v >= 0 ? css("--pos") : css("--neg"), v: mv.map(r => r.net) }],
+      { sub: (i) => `${mv[i].trades} · ${pct(mv[i].win_rate)}`, bottom: 40, valueLabels: true, fmt: (v, i) => `${pts(v)} pts · ${mv[i].trades} trades · avg ${pts(mv[i].avg)}`, label: "Net by size of Nifty move" });
+  }
+
+  function tint(v, maxAbs) {
+    if (v == null || !maxAbs) return "transparent";
+    const a = Math.min(1, Math.abs(v) / maxAbs) * 0.85 + 0.08;
+    const base = v >= 0 ? "42,120,214" : "214,64,63";
+    return `rgba(${base},${(a * 0.45).toFixed(3)})`;
+  }
+
+  function gridTable() {
+    const T = $("gridTable"); T.textContent = "";
+    const prem = [...new Set(DATA.grid.map(r => r.premium))], dtes = [...new Set(DATA.grid.map(r => r.dte))];
+    const maxAbs = Math.max(...DATA.grid.map(r => Math.abs(r.net)));
+    const hr = h("tr", null, null, h("thead", null, null, T)); h("th", "txt", "Premium per leg", hr); dtes.forEach(d => h("th", null, d, hr));
+    const tb = h("tbody", null, null, T);
+    prem.forEach(p => { const tr = h("tr", null, null, tb); tr.style.cursor = "default"; h("td", "txt", "₹" + p, tr);
+      dtes.forEach(d => { const r = DATA.grid.find(g => g.premium === p && g.dte === d); const td = h("td", "cell", pts(r.net), tr); td.style.background = tint(r.net, maxAbs); h("small", null, `${r.years_pos}/${r.years} yrs · ${r.trades} tr`, td); }); });
+  }
+
+  function costTable() {
+    const T = $("costTable"); T.textContent = "";
+    const sids = [...new Set(DATA.cost.map(r => r.sid))], slips = [...new Set(DATA.cost.map(r => r.slip))];
+    const hr = h("tr", null, null, h("thead", null, null, T)); h("th", "txt", "Slippage per order", hr); sids.forEach(s => h("th", null, byId[s] ? byId[s].name : s, hr));
+    const tb = h("tbody", null, null, T);
+    const gr = h("tr", null, null, tb); gr.style.cursor = "default"; h("td", "txt", "Gross decay (no costs)", gr);
+    sids.forEach(s => { const r = DATA.cost.find(c => c.sid === s && c.slip === 0 && c.brokerage === 0); h("td", "num " + sign(r.net), pts(r.net), gr); });
+    slips.forEach(sl => { const tr = h("tr", null, null, tb); tr.style.cursor = "default"; h("td", "txt", `${sl} pt + ₹20 brokerage`, tr);
+      sids.forEach(s => { const r = DATA.cost.find(c => c.sid === s && c.slip === sl && c.brokerage === 20); h("td", "num " + sign(r.net), pts(r.net), tr); }); });
+  }
+
+  function distChart() {
+    const D = DATA.dist;
+    $("distNote").textContent = `Close-to-close change in the Nifty 50 index across ${nf.format(M.move_days)} trading days since ${fmtDate(M.move_from)}, in 50-point ranges. This is the move a one-day option seller is exposed to.`;
+    const ws = $("withinStats"); ws.textContent = "";
+    [50, 100, 150, 200, 300, 400].forEach(k => { const s = h("div", "stat", null, ws); h("b", null, pct(M["within_" + k]), s); h("span", null, `of days within ±${k} pts`, s); });
+    barChart("distChart", D.map(r => (r.lo === -700 ? "<" + r.hi : r.hi === 700 ? r.lo + "+" : String(r.lo))), [{ name: "Share of days", color: css("--s1"), v: D.map(r => r.pct * 100) }],
+      { tick: (t) => t + "%", fmt: (v, i) => `${(D[i].pct * 100).toFixed(1)}% · ${D[i].days} days · rank ${D[i].rank}`, label: "Distribution of daily moves", height: 260 });
+    const T = $("distTable"); T.textContent = "";
+    const hr = h("tr", null, null, h("thead", null, null, T)); ["Rank", "Range (pts)", "Days", "Share", "Cumulative"].forEach((t, i) => h("th", i === 1 ? "txt" : null, t, hr));
+    const tb = h("tbody", null, null, T); let cum = 0;
+    [...D].sort((a, b) => a.rank - b.rank || a.lo - b.lo).forEach(r => { cum += r.pct; const tr = h("tr", null, null, tb); tr.style.cursor = "default";
+      h("td", "num", r.rank, tr); h("td", "txt", r.range, tr); h("td", "num", r.days, tr); h("td", "num", (r.pct * 100).toFixed(1) + "%", tr); h("td", "num", (cum * 100).toFixed(1) + "%", tr); });
+  }
+
+  // ---------- all strategies table
+  let sortKey = "net", sortDir = -1, groupFilter = "All";
+  const cols = [
+    ["name", "Strategy", "txt"], ["trades", "Trades"], ["avg_premium", "Avg premium"], ["gross", "Gross"], ["costs", "Costs"], ["net", "Net pts"],
+    ["net_rs_per_lot", "₹ / lot"], ["win_rate", "Win %"], ["max_dd", "Max DD"], ["worst", "Worst"], ["sharpe", "Sharpe"], ["years_pos", "Yrs +"],
+  ].concat(YEARS.map(y => ["y" + y, String(y)]));
+  function chips() {
+    const C = $("groupChips"); C.textContent = "";
+    ["All"].concat(groups).forEach(g => { const b = h("button", "chip", g, C); b.type = "button"; b.setAttribute("aria-pressed", g === groupFilter); b.onclick = () => { groupFilter = g; chips(); allTable(); }; });
+  }
+  function allTable() {
+    const T = $("allTable"); T.textContent = "";
+    const hr = h("tr", null, null, h("thead", null, null, T));
+    cols.forEach(([k, label, cls]) => { const th = h("th", "sortable " + (cls || "num"), label, hr); th.tabIndex = 0; if (k === sortKey) th.setAttribute("aria-sort", sortDir < 0 ? "descending" : "ascending");
+      const go = () => { if (sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = k === "name" ? 1 : -1; } allTable(); };
+      th.onclick = go; th.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } }; });
+    const rows = S.filter(s => groupFilter === "All" || s.group === groupFilter).sort((a, b) => {
+      const va = a[sortKey], vb = b[sortKey]; if (typeof va === "string") return sortDir * va.localeCompare(vb); return sortDir * ((va ?? -1e18) - (vb ?? -1e18)); });
+    const yMax = Math.max(...S.flatMap(s => YEARS.map(y => Math.abs(s["y" + y] || 0))));
+    const tb = h("tbody", null, null, T);
+    rows.forEach(s => {
+      const tr = h("tr", s.user ? "is-user" : null, null, tb); tr.tabIndex = 0;
+      const n = h("td", "strat-name", s.name, tr); h("small", null, s.group + (s.description ? " · " + s.description : ""), n);
+      h("td", "num", nf.format(s.trades), tr); h("td", "num", s.avg_premium != null ? s.avg_premium.toFixed(1) : "–", tr);
+      h("td", "num", pts(s.gross), tr); h("td", "num", pts(-s.costs), tr); h("td", "num " + sign(s.net), pts(s.net), tr).style.fontWeight = 600;
+      h("td", "num " + sign(s.net), rs(s.net_rs_per_lot), tr); h("td", "num", pct(s.win_rate), tr); h("td", "num", pts(s.max_dd), tr); h("td", "num", pts(s.worst), tr);
+      h("td", "num", s.sharpe != null ? s.sharpe.toFixed(2) : "–", tr);
+      const yp = h("td", "num", null, tr); h("span", "pill " + (s.years_pos === s.years ? "ok" : s.years_pos <= s.years / 2 ? "no" : ""), `${s.years_pos}/${s.years}`, yp);
+      YEARS.forEach(y => { const v = s["y" + y]; const td = h("td", "num", pts(v), tr); td.style.background = tint(v, yMax); });
+      const pick = () => { sel[1] = s.sid; if (sel[2] === s.sid) sel[2] = best.sid === s.sid ? user.sid : best.sid; $("cmpB").value = sel[1]; $("cmpC").value = sel[2]; renderAll(); $("cmpB").scrollIntoView({ behavior: "smooth", block: "center" }); };
+      tr.onclick = pick; tr.onkeydown = (e) => { if (e.key === "Enter") pick(); };
+    });
+  }
+
+  function renderAll() { legend("eqLegend"); legend("yrLegend", true); equityChart(); yearChart(); }
+  fillSelect("cmpB", 1); fillSelect("cmpC", 2);
+  renderAll(); breakdowns(); gridTable(); costTable(); distChart(); chips(); allTable();
+  let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { renderAll(); breakdowns(); distChart(); }, 150); });
+  if (window.matchMedia) window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { renderAll(); breakdowns(); distChart(); });
+  new MutationObserver(() => { renderAll(); breakdowns(); distChart(); }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+})();
+</script>

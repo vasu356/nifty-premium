@@ -1,0 +1,58 @@
+market loaded in 4s: 1454 days
+U1     trades= 1233 net=      216  Your strategy: sell ₹30±5 call + put daily, buy back next day
+U2     trades=  762 net=     -507  ₹30 ±3 band
+U3     trades= 1443 net=      666  ₹30 ±10 band
+U4     trades= 1272 net=     -734  ₹30, call only
+U5     trades= 1382 net=      611  ₹30, put only
+U6     trades=  803 net=     -142  ₹30, skip day after a 150+ pt move
+P10    trades= 1291 net=    -1788  ₹10 strangle, every day
+P15    trades= 1185 net=     -458  ₹15 strangle, every day
+P20    trades= 1208 net=    -1619  ₹20 strangle, every day
+P40    trades= 1253 net=      211  ₹40 strangle, every day
+P50    trades= 1262 net=    -1201  ₹50 strangle, every day
+P75    trades= 1042 net=      386  ₹75 strangle, every day
+P100   trades=  764 net=     -427  ₹100 strangle, every day
+A1     trades= 1450 net=     1685  ATM straddle, every day
+D200   trades= 1450 net=     1369  200 pts OTM strangle, every day
+D300   trades= 1450 net=      186  300 pts OTM strangle, every day
+D500   trades= 1450 net=    -1345  500 pts OTM strangle, every day
+T1     trades=  178 net=     2326  ₹30, only 1 day before expiry
+T2     trades=  257 net=      896  ₹30, only 2 days before expiry
+T3     trades=  280 net=      -18  ₹30, only 3 days before expiry
+T4     trades=  289 net=    -1527  ₹30, only 4 days before expiry
+T5     trades=  226 net=    -1436  ₹30, only 5 days before expiry
+T345   trades=  798 net=    -3006  ₹30, 3+ days before expiry
+L10    trades=  492 net=     1163  Last 2 days, ₹10 strangle
+L20    trades=  431 net=     1142  Last 2 days, ₹20 strangle
+L30    trades=  435 net=     3222  Last 2 days, ₹30 strangle
+L50    trades=  446 net=     2444  Last 2 days, ₹50 strangle
+L75    trades=  270 net=     4369  Last 2 days, ₹75 strangle
+L100   trades=  127 net=     3893  Last 2 days, ₹100 strangle
+LCE    trades=  471 net=     1367  Last 2 days, ₹30 call only
+LPE    trades=  547 net=     1527  Last 2 days, ₹30 put only
+LSK    trades=  282 net=     1290  Last 2 days ₹30, skip after 150+ pt move
+T1_50  trades=  167 net=     1246  Day before expiry only, ₹50
+LATM   trades=  610 net=     5774  Last 2 days, ATM straddle
+L300   trades=  610 net=     3611  Last 2 days, 300 pts OTM
+H2     trades=  257 net=     1472  Hold to expiry from 2 days out, ₹30
+H3     trades=  279 net=     2011  Hold to expiry from 3 days out, ₹30
+H2_50  trades=  260 net=      202  Hold to expiry from 2 days out, ₹50
+W30    trades=  225 net=      538  Full week, ₹30, hold to expiry
+W50    trades=  227 net=      553  Full week, ₹50, hold to expiry
+W100   trades=  191 net=     2091  Full week, ₹100, hold to expiry
+C1     trades= 1231 net=    -6551  Your strategy + ₹5 wings (iron condor)
+C2     trades=  435 net=      -61  Last 2 days ₹30 + ₹5 wings
+C3     trades=  227 net=    -1166  Full week ₹50 + ₹10 wings
+SL2    trades= 1233 net=     1393  Your strategy + 2× stop (realistic)
+SL15   trades= 1233 net=     1005  Your strategy + 1.5× stop (realistic)
+SL2X   trades= 1233 net=     4363  Your strategy + 2× stop (exact fill, unrealistic)
+WSL    trades=  227 net=     1921  Full week ₹50 + 2× stop (realistic)
+LSL    trades=  427 net=     2249  Last 2 days ₹50 + 2× stop (realistic)
+grid 10
+grid 20
+grid 30
+grid 40
+grid 50
+grid 75
+grid 100
+done in 10s

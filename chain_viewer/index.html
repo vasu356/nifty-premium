@@ -1,0 +1,410 @@
+<title>Nifty Option Chain Archive</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: explainer on top, sticky control bar, then the chain (calls | strike | puts) and a contract-history panel under it. */
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --ink: #111418; --ink-2: #4b5260; --muted: #7c8391;
+  --line: #e3e6eb; --axis: #c4c9d1; --accent: #2a5bd7; --accent-ink: #ffffff;
+  --itm: #fbf3dc; --atm: #e8effc; --spot: #2a5bd7; --sel: #dbe6fb;
+  --up: #0c7d0c; --down: #c33232; --bar-ce: rgba(214,64,63,.16); --bar-pe: rgba(12,125,12,.16);
+  --line-1: #2a78d6; --line-2: #898781;
+  --f-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1114; --surface: #171a1f; --ink: #eef0f3; --ink-2: #b9bfc9; --muted: #8a919c;
+  --line: #262a31; --axis: #3a404a; --accent: #7aa2ff; --accent-ink: #0f1114;
+  --itm: #2a2615; --atm: #1b2638; --spot: #7aa2ff; --sel: #22314d;
+  --up: #3cc23c; --down: #ef7070; --bar-ce: rgba(239,112,112,.20); --bar-pe: rgba(60,194,60,.18);
+  --line-1: #3987e5; --line-2: #8a919c; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0f1114; --surface: #171a1f; --ink: #eef0f3; --ink-2: #b9bfc9; --muted: #8a919c;
+  --line: #262a31; --axis: #3a404a; --accent: #7aa2ff; --accent-ink: #0f1114;
+  --itm: #2a2615; --atm: #1b2638; --spot: #7aa2ff; --sel: #22314d;
+  --up: #3cc23c; --down: #ef7070; --bar-ce: rgba(239,112,112,.20); --bar-pe: rgba(60,194,60,.18);
+  --line-1: #3987e5; --line-2: #8a919c; color-scheme: dark; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 14px; line-height: 1.5; margin: 0; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap { max-width: 1280px; margin: 0 auto; padding-block: 24px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 18px; }
+h1, h2, h3 { font-family: var(--f-display); margin: 0; text-wrap: balance; letter-spacing: -.01em; }
+h1 { font-size: clamp(26px, 4vw, 36px); line-height: 1.1; }
+h2 { font-size: 18px; } h3 { font-size: 14px; }
+p { margin: 0; max-width: 75ch; }
+.eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.lede { color: var(--ink-2); font-size: 15px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: grid; gap: 14px; min-width: 0; }
+details.panel > summary { cursor: pointer; font-family: var(--f-display); font-weight: 600; font-size: 17px; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+details.panel > summary::after { content: "Show"; font-family: var(--f-body); font-size: 13px; font-weight: 500; color: var(--accent); }
+details.panel[open] > summary::after { content: "Hide"; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px 24px; }
+.fact { display: grid; gap: 4px; align-content: start; }
+.fact b { font-size: 13px; } .fact span { color: var(--ink-2); font-size: 13px; }
+.mono, .num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.scroll { overflow-x: auto; min-width: 0; }
+table { border-collapse: collapse; font-size: 12.5px; }
+.plain td, .plain th { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+.plain th { color: var(--ink-2); font-weight: 600; font-size: 12px; }
+.plain .l { text-align: left; }
+code { font-family: var(--f-mono); font-size: 12px; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 6; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px;
+  display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: end; box-shadow: 0 4px 14px rgba(0,0,0,.05); }
+.field { display: grid; gap: 4px; font-size: 11.5px; color: var(--muted); min-width: 0; }
+.field .row { display: flex; gap: 6px; align-items: center; }
+input[type=date], select { font: inherit; font-size: 14px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; min-width: 0; }
+select#expiry { max-width: 300px; }
+button { font: inherit; cursor: pointer; }
+.btn { font-size: 13px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; }
+.btn:hover { border-color: var(--axis); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button { border: 0; background: var(--bg); color: var(--ink-2); padding: 6px 10px; font-size: 13px; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+.check { display: flex; gap: 6px; align-items: center; font-size: 13px; color: var(--ink-2); padding-bottom: 6px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.summary { display: flex; flex-wrap: wrap; gap: 8px; }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; display: grid; gap: 1px; min-width: 120px; }
+.kpi span { font-size: 11.5px; color: var(--muted); } .kpi b { font-family: var(--f-mono); font-size: 16px; font-weight: 600; }
+.kpi small { font-family: var(--f-mono); font-size: 11px; color: var(--ink-2); }
+.status { font-size: 13px; color: var(--muted); min-height: 1.2em; }
+.chain-wrap { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: auto; max-height: 78vh; min-width: 0; }
+table.chain { width: 100%; font-size: 12.5px; }
+.chain th, .chain td { padding: 5px 8px; text-align: right; white-space: nowrap; border-bottom: 1px solid var(--line); font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.chain thead th { position: sticky; z-index: 2; background: var(--surface); font-family: var(--f-body); font-weight: 600; color: var(--ink-2); font-size: 11.5px; }
+.chain thead tr:first-child th { top: 0; font-family: var(--f-display); font-size: 13px; color: var(--ink); letter-spacing: .04em; }
+.chain thead tr:nth-child(2) th { top: 29px; }
+.chain td.k { text-align: center; font-weight: 600; background: var(--bg); color: var(--ink); border-left: 1px solid var(--line); border-right: 1px solid var(--line); }
+.chain tr.atm td.k { background: var(--atm); color: var(--accent); }
+.chain td.itm { background: var(--itm); }
+.chain td.px { cursor: pointer; font-weight: 600; color: var(--ink); }
+.chain td.px:hover { outline: 1px solid var(--accent); outline-offset: -1px; }
+.chain td.px.sel { background: var(--sel); }
+.chain td.stale { color: var(--muted); font-weight: 400; font-style: italic; }
+.chain td.oi { position: relative; }
+.chain td.oi .b { position: absolute; top: 3px; bottom: 3px; border-radius: 2px; z-index: 0; }
+.chain td.oi span { position: relative; z-index: 1; }
+.chain td.ce-side .b { right: 0; background: var(--bar-ce); }
+.chain td.pe-side .b { left: 0; background: var(--bar-pe); }
+.up { color: var(--up); } .down { color: var(--down); }
+.mut { color: var(--muted); }
+.spotrow td { padding: 0; border-bottom: 0; height: 0; position: relative; }
+.spotrow td div { position: absolute; left: 0; right: 0; top: -1px; border-top: 2px solid var(--spot); }
+.spotrow td.k div::after { content: attr(data-label); position: absolute; left: 50%; transform: translate(-50%, -50%); background: var(--spot); color: var(--accent-ink); font-size: 10.5px; padding: 1px 6px; border-radius: 999px; white-space: nowrap; z-index: 3; font-weight: 600; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--ink-2); }
+.legend span { display: inline-flex; gap: 6px; align-items: center; }
+.sw { width: 14px; height: 10px; border-radius: 2px; display: inline-block; border: 1px solid var(--line); }
+.chart { position: relative; min-width: 0; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart text { font-family: var(--f-mono); font-size: 11px; fill: var(--muted); }
+.tip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,.12); padding: 8px 10px; font-size: 12px; display: grid; gap: 2px; z-index: 5; min-width: 160px; }
+.tip .h { font-family: var(--f-mono); font-size: 11px; color: var(--muted); }
+.tip .r { display: flex; justify-content: space-between; gap: 12px; } .tip .r b { font-family: var(--f-mono); font-weight: 500; }
+.hist-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; align-items: baseline; }
+.empty { color: var(--muted); font-size: 13px; padding: 8px 0; }
+@media (max-width: 640px) { .bar { position: static; } .chain thead tr:nth-child(2) th { top: 27px; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+</style>
+
+<div class="wrap">
+  <header style="display:grid; gap:10px;">
+    <div class="eyebrow" id="eyebrow">NSE end-of-day archive · Nifty 50 options</div>
+    <h1>Nifty Option Chain Archive</h1>
+    <p class="lede">Every Nifty option contract NSE reported at the close of every trading day since January 2021. Pick a date and an expiry to see the chain as it stood that evening. Click any premium to see that contract's day-by-day history.</p>
+  </header>
+
+  <details class="panel" id="explain" open>
+    <summary>How this data is stored</summary>
+    <div class="facts">
+      <div class="fact"><b>End-of-day, not minute data</b><span>Source is the NSE F&amp;O <i>bhavcopy</i>: one snapshot per trading day, published after the close. There is no minute-by-minute or tick data in it. Open is the first trade, high and low are the day's range. <b>Close is NSE's official closing price: the volume-weighted average of trades in the last 30 minutes (3:00–3:30 PM)</b>, not the final trade, so it can differ from the last traded price by a few points.</span></div>
+      <div class="fact"><b>One row per contract per day</b><span>A contract is one expiry + one strike + call (CE) or put (PE). Every trading day lists every live contract, roughly <span id="fRows">1,800</span> rows a day across <span id="fExp">12–21</span> expiries (weekly, monthly and long-dated).</span></div>
+      <div class="fact"><b>Fields in each row</b><span><code>open</code> <code>high</code> <code>low</code> <code>close</code> premium in ₹ · <code>settle</code> NSE's settlement price · <code>volume</code> contracts traded · <code>OI</code> open interest at the close (shown here in contracts). Change and change-in-OI are computed against the same contract's previous day.</span></div>
+      <div class="fact"><b>Untraded strikes</b><span>About half of all rows had no trades that day. For those, NSE still prints a close: the previous day's close carried forward. They appear here in grey italics and should not be read as real fills.</span></div>
+      <div class="fact"><b>Time series</b><span>Following one contract across days gives its daily history: one point per day, from listing to expiry. Click a premium in the chain to see it.</span></div>
+      <div class="fact"><b>Spot</b><span>Nifty 50 open, high, low and close for each day come from NSE's daily index file. Strikes below spot are in-the-money for calls; strikes above are in-the-money for puts.</span></div>
+    </div>
+    <div class="scroll"><table class="plain" id="yearTable"></table></div>
+  </details>
+
+  <div class="bar" role="group" aria-label="Chain controls">
+    <div class="field"><label for="date">Trading day</label>
+      <div class="row"><button class="btn" id="prev" type="button" aria-label="Previous trading day">◀</button><input type="date" id="date"><button class="btn" id="next" type="button" aria-label="Next trading day">▶</button></div></div>
+    <div class="field"><label for="expiry">Expiry</label><select id="expiry"></select></div>
+    <div class="field"><span>Strikes around spot</span><div class="seg" id="range"><button type="button" data-v="10">±10</button><button type="button" data-v="20">±20</button><button type="button" data-v="0">All</button></div></div>
+    <div class="field"><span>Columns</span><div class="seg" id="cols"><button type="button" data-v="basic">Chain</button><button type="button" data-v="full">+ OHLC &amp; settle</button></div></div>
+    <label class="check" for="hideUntraded"><input type="checkbox" id="hideUntraded"> Hide strikes with no trades</label>
+  </div>
+
+  <div class="status" id="status" role="status">Loading index…</div>
+  <div class="summary" id="summary"></div>
+  <div class="legend">
+    <span><i class="sw" style="background:var(--itm)"></i>In the money</span>
+    <span><i class="sw" style="background:var(--atm)"></i>Strike nearest spot</span>
+    <span><i class="sw" style="background:var(--spot)"></i>Spot close</span>
+    <span><i class="sw" style="background:var(--bar-ce)"></i>Call OI</span>
+    <span><i class="sw" style="background:var(--bar-pe)"></i>Put OI</span>
+    <span class="mut"><i>12.35</i>&nbsp;no trades that day</span>
+  </div>
+  <div class="chain-wrap"><table class="chain" id="chain"></table></div>
+
+  <section class="panel" id="hist">
+    <div class="hist-head"><h2 id="histTitle">Contract history</h2><span class="status" id="histStatus"></span></div>
+    <p class="empty" id="histEmpty">Click any call or put premium in the chain to see how that contract traded each day, up to its expiry.</p>
+    <div class="legend" id="histLegend" hidden><span><i class="sw" style="background:var(--line-1);height:3px"></i>Close premium (₹)</span><span><i class="sw" style="background:var(--line-2);height:3px"></i>Day's high–low range</span></div>
+    <div class="chart" id="histChart"></div>
+    <div class="scroll" style="max-height: 420px; overflow: auto;"><table class="plain" id="histTable"></table></div>
+  </section>
+</div>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const h = (tag, cls, text, parent) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; if (parent) parent.appendChild(e); return e; };
+  const NS = "http://www.w3.org/2000/svg";
+  const sv = (tag, a, p) => { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; };
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const nf = new Intl.NumberFormat("en-IN"), nf2 = new Intl.NumberFormat("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const px = (t) => t == null ? "–" : nf2.format(t / 20);
+  const chg = (t) => t == null ? "–" : (t > 0 ? "+" : t < 0 ? "−" : "") + nf2.format(Math.abs(t) / 20);
+  const int = (v) => v == null ? "–" : nf.format(v);
+  const sint = (v) => v == null ? "–" : (v > 0 ? "+" : v < 0 ? "−" : "") + nf.format(Math.abs(v));
+  const fmtD = (d, opts) => new Date(d + "T00:00:00").toLocaleDateString("en-GB", opts || { day: "numeric", month: "short", year: "numeric" });
+  const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+
+  let IDX = null, DAYS = [], MONTHLY = new Set();
+  const cache = new Map();
+  const state = { date: null, expiry: null, range: Number(store.get("range") ?? 10), cols: store.get("cols") || "basic", hide: store.get("hide") === "1", pick: null };
+
+  async function loadMonth(m) {
+    if (!cache.has(m)) cache.set(m, fetch(`data/${m}.json`).then(r => { if (!r.ok) throw new Error(`data/${m}.json: HTTP ${r.status}`); return r.json(); }).catch(e => { cache.delete(m); throw e; }));
+    return cache.get(m);
+  }
+  const dteOf = (d, e) => { let i = DAYS.indexOf(d), n = 0; while (i < DAYS.length - 1 && DAYS[i] < e) { i++; n++; } return DAYS[DAYS.length - 1] < e ? null : n; };
+  // beyond the last day in the data, estimate with weekdays (ignores holidays), marked with ~
+  const weekdays = (a, b) => { let n = 0; const t = new Date(a + "T00:00:00"), end = new Date(b + "T00:00:00"); while (t < end) { t.setDate(t.getDate() + 1); const w = t.getDay(); if (w && w < 6) n++; } return n; };
+  const dteLabel = (d, e) => { const n = dteOf(d, e); if (n != null) return String(n); if (DAYS[DAYS.length - 1] >= e) return "–"; const last = DAYS[DAYS.length - 1]; return "~" + ((dteOf(d, last) ?? 0) + weekdays(last, e)); };
+
+  function explainTables() {
+    const T = $("yearTable"); T.textContent = "";
+    const hr = h("tr", null, null, h("thead", null, null, T));
+    ["Year", "Trading days", "Contract-day rows", "Rows with trades", "Distinct expiries listed"].forEach((t, i) => h("th", i ? null : "l", t, hr));
+    const tb = h("tbody", null, null, T);
+    Object.entries(IDX.years).forEach(([y, s]) => { const tr = h("tr", null, null, tb); h("td", "l", y, tr); h("td", "num", int(s.days), tr); h("td", "num", int(s.rows), tr); h("td", "num", `${int(s.traded)} (${Math.round(s.traded / s.rows * 100)}%)`, tr); h("td", "num", int(s.expiries), tr); });
+    const t = IDX.totals, tr = h("tr", null, null, tb); tr.style.fontWeight = 600;
+    h("td", "l", "Total", tr); h("td", "num", int(t.days), tr); h("td", "num", int(t.rows), tr); h("td", "num", `${int(t.traded)} (${Math.round(t.traded / t.rows * 100)}%)`, tr); h("td", "num", `${int(t.expiries)} · ${int(t.contracts)} contracts`, tr);
+    $("fRows").textContent = int(Math.round(t.rows / t.days));
+    const ec = DAYS.map(d => IDX.days[d].e.length); $("fExp").textContent = `${Math.min(...ec)}–${Math.max(...ec)}`;
+    $("eyebrow").textContent = `NSE end-of-day archive · Nifty 50 options · ${fmtD(t.first)} – ${fmtD(t.last)}`;
+  }
+
+  function setSeg(id, val) { $(id).querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === String(val)))); }
+
+  function fillExpiries() {
+    const sel = $("expiry"); sel.textContent = "";
+    const ex = IDX.days[state.date].e;
+    ex.forEach(e => { const n = dteOf(state.date, e); const kind = MONTHLY.has(e) ? "monthly" : "weekly";
+      const o = h("option", null, `${fmtD(e, { day: "numeric", month: "short", year: "numeric" })} · ${kind}${n === 0 ? " · expires today" : ` · ${dteLabel(state.date, e)} trading day${n === 1 ? "" : "s"}`}`, sel); o.value = e; });
+    if (!state.expiry || !ex.includes(state.expiry)) state.expiry = ex.find(e => e > state.date) || ex[0];
+    sel.value = state.expiry;
+  }
+
+  async function render() {
+    const d = state.date; $("date").value = d;
+    store.set("date", d);
+    fillExpiries();
+    $("status").textContent = `Loading ${fmtD(d)}…`;
+    let M;
+    try { M = await loadMonth(IDX.days[d].m); } catch (e) { $("status").textContent = `Could not load data for ${fmtD(d)} (${e.message}). Try again or pick another date.`; return; }
+    if (state.date !== d) return;
+    const day = M.days[d], ch = day.exp[state.expiry], spot = day.spot ? day.spot[3] : null;
+    $("status").textContent = `${fmtD(d, { weekday: "long", day: "numeric", month: "long", year: "numeric" })} · expiry ${fmtD(state.expiry)} · ${ch.k.length} strikes listed`;
+    // summary
+    const S = $("summary"); S.textContent = "";
+    const kpi = (label, val, sub) => { const k = h("div", "kpi", null, S); h("span", null, label, k); h("b", null, val, k); if (sub) h("small", null, sub, k); };
+    if (day.spot) kpi("Nifty 50 close", nf2.format(spot), `O ${nf2.format(day.spot[0])} · H ${nf2.format(day.spot[1])} · L ${nf2.format(day.spot[2])}`);
+    const n = dteOf(d, state.expiry); kpi("Days to expiry", dteLabel(d, state.expiry), n === 0 ? "expires today" : n == null ? "trading days (est.)" : "trading days");
+    kpi("Lot size", String(day.lot), "units per contract");
+    const sum = (a) => a.reduce((x, v) => x + (v || 0), 0);
+    const ceOI = sum(ch.CE.oi), peOI = sum(ch.PE.oi), ceV = sum(ch.CE.v), peV = sum(ch.PE.v);
+    kpi("Put/call OI ratio", ceOI ? (peOI / ceOI).toFixed(2) : "–", `${int(peOI)} / ${int(ceOI)} contracts`);
+    kpi("Volume", int(ceV + peV), `calls ${int(ceV)} · puts ${int(peV)}`);
+    const maxI = (a) => a.reduce((bi, v, i) => (v || 0) > (a[bi] || 0) ? i : bi, 0);
+    kpi("Highest OI strikes", `${ch.k[maxI(ch.CE.oi)]} CE`, `${ch.k[maxI(ch.PE.oi)]} PE`);
+    drawChain(day, ch, spot);
+  }
+
+  function drawChain(day, ch, spot) {
+    const T = $("chain"); T.textContent = "";
+    const full = state.cols === "full";
+    const ceCols = full ? ["oi", "coi", "v", "o", "h", "l", "s", "ch", "c"] : ["oi", "coi", "v", "ch", "c"];
+    const peCols = [...ceCols].reverse();
+    const names = { oi: "OI", coi: "Chg OI", v: "Volume", o: "Open", h: "High", l: "Low", s: "Settle", ch: "Chg", c: "Close" };
+    const th = h("thead", null, null, T), r1 = h("tr", null, null, th), r2 = h("tr", null, null, th);
+    const c1 = h("th", null, "CALLS", r1); c1.colSpan = ceCols.length; c1.style.textAlign = "center";
+    h("th", null, "", r1).style.background = "var(--bg)";
+    const c3 = h("th", null, "PUTS", r1); c3.colSpan = peCols.length; c3.style.textAlign = "center";
+    ceCols.forEach(c => h("th", null, names[c], r2)); const ks = h("th", null, "Strike", r2); ks.style.textAlign = "center"; peCols.forEach(c => h("th", null, names[c], r2));
+    // which strikes
+    let idx = ch.k.map((_, i) => i);
+    if (state.hide) idx = idx.filter(i => (ch.CE.v[i] || 0) > 0 || (ch.PE.v[i] || 0) > 0);
+    let atm = 0; if (spot != null) atm = ch.k.reduce((b, k, i) => Math.abs(k - spot) < Math.abs(ch.k[b] - spot) ? i : b, 0);
+    if (state.range > 0 && spot != null) {
+      const pos = idx.findIndex(i => ch.k[i] >= spot); const c = pos < 0 ? idx.length : pos;
+      idx = idx.slice(Math.max(0, c - state.range), c + state.range);
+    }
+    const maxOI = Math.max(1, ...ch.CE.oi.map(v => v || 0), ...ch.PE.oi.map(v => v || 0));
+    const tb = h("tbody", null, null, T);
+    let spotDone = spot == null;
+    const nCols = ceCols.length * 2 + 1;
+    const spotRow = () => { const tr = h("tr", "spotrow", null, tb); for (let j = 0; j < nCols; j++) { const td = h("td", j === ceCols.length ? "k" : null, null, tr); const dv = h("div", null, null, td); if (j === ceCols.length) dv.dataset.label = `Spot ${nf2.format(spot)}`; } spotDone = true; };
+    if (!idx.length) { const tr = h("tr", null, null, tb); const td = h("td", null, "No strikes match these filters.", tr); td.colSpan = nCols; td.style.textAlign = "center"; return; }
+    idx.forEach(i => {
+      const k = ch.k[i];
+      if (!spotDone && k >= spot) spotRow();
+      const tr = h("tr", i === atm ? "atm" : null, null, tb);
+      const cell = (side, c) => {
+        const a = ch[side], v = a[c][i], traded = (a.v[i] || 0) > 0, itm = spot != null && (side === "CE" ? k < spot : k > spot);
+        const td = h("td", (itm ? "itm " : "") + (side === "CE" ? "ce-side" : "pe-side"), null, tr);
+        if (a.c[i] == null) { td.textContent = ""; return; }
+        if (c === "oi") { td.classList.add("oi"); const b = h("i", "b", null, td); b.style.width = ((v || 0) / maxOI * 100).toFixed(1) + "%"; h("span", null, int(v), td); }
+        else if (c === "coi") { td.textContent = sint(v); if (v) td.classList.add(v > 0 ? "up" : "down"); }
+        else if (c === "v") { td.textContent = int(v); if (!v) td.classList.add("mut"); }
+        else if (c === "ch") { td.textContent = chg(v); if (v) td.classList.add(v > 0 ? "up" : "down"); }
+        else if (c === "c") {
+          td.textContent = px(v); td.classList.add("px"); if (!traded) { td.classList.add("stale"); td.title = "No trades this day: NSE's carried/theoretical close"; }
+          td.tabIndex = 0; td.setAttribute("role", "button"); td.setAttribute("aria-label", `${k} ${side} close ${px(v)}, show history`);
+          if (state.pick && state.pick.e === state.expiry && state.pick.k === k && state.pick.side === side) td.classList.add("sel");
+          const go = () => { state.pick = { e: state.expiry, k, side }; document.querySelectorAll(".chain td.sel").forEach(x => x.classList.remove("sel")); td.classList.add("sel"); history(); };
+          td.onclick = go; td.onkeydown = (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); go(); } };
+        }
+        else { td.textContent = traded || c === "s" ? px(v) : "–"; if (!traded && c !== "s") td.classList.add("mut"); }
+      };
+      ceCols.forEach(c => cell("CE", c));
+      h("td", "k", nf.format(k), tr);
+      peCols.forEach(c => cell("PE", c));
+    });
+    if (!spotDone) spotRow();
+    // keep the strike nearest spot in view
+    const atmRow = T.querySelector("tr.atm"); const wrap = T.parentElement;
+    if (atmRow) wrap.scrollTop = Math.max(0, atmRow.offsetTop - wrap.clientHeight / 2);
+  }
+
+  async function history() {
+    const p = state.pick; if (!p) return;
+    const life = IDX.expiryLife[p.e];
+    const months = IDX.months.filter(m => m >= life[0].slice(0, 7) && m <= life[1].slice(0, 7));
+    // long-dated contracts can live for years: cap to 6 months either side of the chosen day
+    const cm = state.date.slice(0, 7), ci = IDX.months.indexOf(cm);
+    const win = IDX.months.slice(Math.max(0, ci - 6), ci + 7);
+    const use = months.filter(m => win.includes(m));
+    const capped = use.length < months.length;
+    $("histTitle").textContent = `NIFTY ${fmtD(p.e)} ${nf.format(p.k)} ${p.side === "CE" ? "Call" : "Put"}`;
+    $("histStatus").textContent = `Loading ${use.length} month${use.length === 1 ? "" : "s"}…`;
+    $("histEmpty").hidden = true;
+    let rows = [];
+    try {
+      const data = await Promise.all(use.map(loadMonth));
+      data.forEach(M => Object.entries(M.days).forEach(([d, day]) => {
+        const ch = day.exp[p.e]; if (!ch) return; const i = ch.k.indexOf(p.k); if (i < 0) return; const a = ch[p.side]; if (a.c[i] == null) return;
+        rows.push({ d, o: a.o[i], h: a.h[i], l: a.l[i], c: a.c[i], s: a.s[i], ch: a.ch[i], v: a.v[i], oi: a.oi[i], coi: a.coi[i], spot: day.spot ? day.spot[3] : null });
+      }));
+    } catch (e) { $("histStatus").textContent = `Could not load history (${e.message}).`; return; }
+    if (state.pick !== p) return;
+    rows.sort((a, b) => a.d < b.d ? -1 : 1);
+    $("histStatus").textContent = `${rows.length} trading days · ${rows.filter(r => r.v > 0).length} with trades` + (capped ? " · showing 6 months either side of the selected day" : "") + (p.e > IDX.totals.last ? " · contract still live at end of data" : "");
+    $("histLegend").hidden = false;
+    histChart(rows, p);
+    const T = $("histTable"); T.textContent = "";
+    const hr = h("tr", null, null, h("thead", null, null, T));
+    ["Date", "Days left", "Open", "High", "Low", "Close", "Chg", "Settle", "Volume", "OI", "Chg OI", "Nifty close"].forEach((t, i) => h("th", i ? null : "l", t, hr));
+    const tb = h("tbody", null, null, T);
+    [...rows].reverse().forEach(r => {
+      const tr = h("tr", null, null, tb); if (r.d === state.date) tr.style.background = "var(--sel)";
+      const traded = r.v > 0; const n = dteOf(r.d, p.e);
+      h("td", "l", fmtD(r.d, { weekday: "short", day: "numeric", month: "short", year: "2-digit" }), tr);
+      h("td", "num", dteLabel(r.d, p.e), tr);
+      [traded ? px(r.o) : "–", traded ? px(r.h) : "–", traded ? px(r.l) : "–"].forEach(t => h("td", "num", t, tr));
+      const c = h("td", "num" + (traded ? "" : " mut"), px(r.c), tr); c.style.fontWeight = 600; if (!traded) c.style.fontStyle = "italic";
+      const cc = h("td", "num " + (r.ch > 0 ? "up" : r.ch < 0 ? "down" : ""), chg(r.ch), tr);
+      h("td", "num", px(r.s), tr); h("td", "num", int(r.v), tr); h("td", "num", int(r.oi), tr);
+      h("td", "num " + (r.coi > 0 ? "up" : r.coi < 0 ? "down" : ""), sint(r.coi), tr);
+      h("td", "num", r.spot == null ? "–" : nf2.format(r.spot), tr);
+    });
+    $("hist").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function histChart(rows, p) {
+    const box = $("histChart"); box.textContent = "";
+    if (rows.length < 2) { h("p", "empty", "Only one day of data for this contract.", box); return; }
+    const W = Math.max(320, box.clientWidth || 900), H = W < 600 ? 220 : 280, m = { l: 56, r: 14, t: 10, b: 26 };
+    const vals = rows.flatMap(r => [r.c, r.v > 0 ? r.h : null, r.v > 0 ? r.l : null]).filter(v => v != null).map(v => v / 20);
+    let lo = 0, hi = Math.max(...vals) || 1;
+    const step = (() => { const raw = hi / 4, mag = Math.pow(10, Math.floor(Math.log10(raw))); return [1, 2, 2.5, 5, 10].map(x => x * mag).find(s => hi / s <= 4); })();
+    hi = Math.ceil(hi / step) * step;
+    const n = rows.length, x = (i) => m.l + i / (n - 1) * (W - m.l - m.r), y = (v) => m.t + (hi - v) / (hi - lo) * (H - m.t - m.b);
+    const svg = sv("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Daily close premium" }, box);
+    for (let v = 0; v <= hi + 1e-9; v += step) { sv("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: v === 0 ? css("--axis") : css("--line") }, svg); sv("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end" }, svg).textContent = "₹" + nf.format(v); }
+    const lblEvery = Math.max(1, Math.ceil(n / (W / 90)));
+    rows.forEach((r, i) => { if (i % lblEvery === 0) sv("text", { x: x(i), y: H - 8, "text-anchor": i === 0 ? "start" : "middle" }, svg).textContent = fmtD(r.d, { day: "numeric", month: "short" }); });
+    rows.forEach((r, i) => { if (r.v > 0 && r.h != null) sv("line", { x1: x(i), x2: x(i), y1: y(r.h / 20), y2: y(r.l / 20), stroke: css("--line-2"), "stroke-width": 2, "stroke-linecap": "round", opacity: .55 }, svg); });
+    let d = ""; rows.forEach((r, i) => { d += (i ? "L" : "M") + x(i).toFixed(1) + " " + y(r.c / 20).toFixed(1); });
+    sv("path", { d, fill: "none", stroke: css("--line-1"), "stroke-width": 2, "stroke-linejoin": "round" }, svg);
+    const sel = rows.findIndex(r => r.d === state.date);
+    if (sel >= 0) sv("circle", { cx: x(sel), cy: y(rows[sel].c / 20), r: 5, fill: css("--line-1"), stroke: css("--surface"), "stroke-width": 2 }, svg);
+    const hair = sv("line", { y1: m.t, y2: H - m.b, stroke: css("--axis"), visibility: "hidden" }, svg);
+    const dot = sv("circle", { r: 4, fill: css("--line-1"), stroke: css("--surface"), "stroke-width": 2, visibility: "hidden" }, svg);
+    const tip = h("div", "tip", null, box); tip.hidden = true;
+    const hit = sv("rect", { x: m.l, y: m.t, width: W - m.l - m.r, height: H - m.t - m.b, fill: "transparent", tabindex: 0 }, svg);
+    let fi = sel >= 0 ? sel : n - 1;
+    const show = (i) => { i = Math.max(0, Math.min(n - 1, i)); fi = i; const r = rows[i];
+      hair.setAttribute("x1", x(i)); hair.setAttribute("x2", x(i)); hair.setAttribute("visibility", "visible");
+      dot.setAttribute("cx", x(i)); dot.setAttribute("cy", y(r.c / 20)); dot.setAttribute("visibility", "visible");
+      tip.textContent = ""; h("div", "h", fmtD(r.d, { weekday: "short", day: "numeric", month: "short", year: "numeric" }), tip);
+      [["Close", px(r.c) + (r.v > 0 ? "" : " (no trades)")], ["High / low", r.v > 0 ? `${px(r.h)} / ${px(r.l)}` : "–"], ["Volume", int(r.v)], ["OI", int(r.oi)], ["Nifty", r.spot == null ? "–" : nf2.format(r.spot)]]
+        .forEach(([a, b]) => { const rr = h("div", "r", null, tip); h("span", null, a, rr); h("b", null, b, rr); });
+      tip.hidden = false; const sc = svg.getBoundingClientRect().width / W; let left = x(i) * sc + 12; if (left + tip.offsetWidth > box.clientWidth) left = x(i) * sc - tip.offsetWidth - 12;
+      tip.style.left = Math.max(0, left) + "px"; tip.style.top = (y(r.c / 20) * sc - 10) + "px"; };
+    const hide = () => { hair.setAttribute("visibility", "hidden"); dot.setAttribute("visibility", "hidden"); tip.hidden = true; };
+    hit.addEventListener("pointermove", (e) => { const rc = svg.getBoundingClientRect(); show(Math.round(((e.clientX - rc.left) * W / rc.width - m.l) / (W - m.l - m.r) * (n - 1))); });
+    hit.addEventListener("pointerleave", hide); hit.addEventListener("blur", hide); hit.addEventListener("focus", () => show(fi));
+    hit.addEventListener("keydown", (e) => { if (e.key === "ArrowLeft") show(fi - 1); if (e.key === "ArrowRight") show(fi + 1); });
+  }
+
+  function goDate(v) {
+    if (!v) return;
+    let d = v; if (!IDX.days[d]) { const prev = DAYS.filter(x => x <= v).pop() || DAYS[0]; d = prev; }
+    state.date = d; render();
+    if (v !== d) $("status").textContent += ` · ${fmtD(v)} was not a trading day, showing the previous one`;
+  }
+
+  async function init() {
+    try { IDX = await (await fetch("data/index.json")).json(); }
+    catch (e) {
+      const st = $("status"); st.textContent = "The chain data could not be loaded. This page needs its data folder next to it, so it does not work when the file is opened on its own. Open the published viewer instead: ";
+      const a = h("a", null, "claude.ai/artifact/HPnwN92JyQwj6p94iXYtpa", st); a.href = "https://claude.ai/artifact/HPnwN92JyQwj6p94iXYtpa"; a.target = "_blank"; a.rel = "noopener"; a.style.color = "var(--accent)";
+      return;
+    }
+    DAYS = Object.keys(IDX.days).sort();
+    const byMonth = {}; Object.keys(IDX.expiryLife).forEach(e => { const k = e.slice(0, 7); if (!byMonth[k] || e > byMonth[k]) byMonth[k] = e; }); MONTHLY = new Set(Object.values(byMonth));
+    $("date").min = DAYS[0]; $("date").max = DAYS[DAYS.length - 1];
+    explainTables();
+    setSeg("range", state.range); setSeg("cols", state.cols); $("hideUntraded").checked = state.hide;
+    $("range").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; state.range = Number(b.dataset.v); store.set("range", state.range); setSeg("range", state.range); render(); };
+    $("cols").onclick = (e) => { const b = e.target.closest("button"); if (!b) return; state.cols = b.dataset.v; store.set("cols", state.cols); setSeg("cols", state.cols); render(); };
+    $("hideUntraded").onchange = (e) => { state.hide = e.target.checked; store.set("hide", state.hide ? "1" : "0"); render(); };
+    $("date").onchange = (e) => goDate(e.target.value);
+    $("prev").onclick = () => { const i = DAYS.indexOf(state.date); if (i > 0) { state.date = DAYS[i - 1]; render(); } };
+    $("next").onclick = () => { const i = DAYS.indexOf(state.date); if (i < DAYS.length - 1) { state.date = DAYS[i + 1]; render(); } };
+    $("expiry").onchange = (e) => { state.expiry = e.target.value; render(); };
+    const saved = store.get("date");
+    state.date = saved && IDX.days[saved] ? saved : DAYS[DAYS.length - 1];
+    render();
+  }
+  init();
+})();
+</script>

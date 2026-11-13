@@ -1,0 +1,47 @@
+sid,family,name,description,trades,total,avg,win,worst,max_dd,ret_dd,months_pos,h1,h2,prem,big
+A1,Baseline,"₹30 strangle, every day","Your original: nearest ₹30 call + put every day, overnight.",297,1416.20,4.77,0.74,-421.85,-916.90,1.54,10/15,922.00,494.20,59.70,-2875.95
+A2,Baseline,"₹30 strangle, last 2 days",Best from the premium study: only 1–2 trading days before expiry.,125,1550.00,12.40,0.74,-421.85,-475.65,3.26,10/15,850.55,699.45,59.83,-1410.50
+A3,Baseline,"₹30 strangle, day before expiry only","Only the session before expiry, bought back at the expiry-day close.",63,1102.45,17.50,0.78,-421.85,-483.45,2.28,11/15,641.55,460.90,59.72,-1100.95
+B2_30,Hold to expiry,"₹30 strangle sold 2 days out, held to expiry",Sell nearest ₹30 call + put 2 trading days before expiry; buy back at the expiry-day close.,62,260.25,4.20,0.77,-459.55,-636.05,0.41,9/15,24.40,235.85,59.94,-1810.55
+B2_50,Hold to expiry,"₹50 strangle sold 2 days out, held to expiry",Sell nearest ₹50 call + put 2 trading days before expiry; buy back at the expiry-day close.,62,229.65,3.70,0.69,-473.55,-1065.75,0.22,8/15,-331.60,561.25,100.13,-2187.10
+B3_30,Hold to expiry,"₹30 strangle sold 3 days out, held to expiry",Sell nearest ₹30 call + put 3 trading days before expiry; buy back at the expiry-day close.,62,558.30,9.00,0.74,-457.45,-671.15,0.83,10/15,647.85,-89.55,59.38,-1324.80
+B3_50,Hold to expiry,"₹50 strangle sold 3 days out, held to expiry",Sell nearest ₹50 call + put 3 trading days before expiry; buy back at the expiry-day close.,62,283.70,4.58,0.65,-518.40,-805.10,0.35,8/15,443.30,-159.60,98.36,-2125.10
+B5_30,Hold to expiry,"₹30 strangle sold 5 days out, held to expiry",Sell nearest ₹30 call + put 5 trading days before expiry; buy back at the expiry-day close.,46,233.55,5.08,0.85,-682.20,-1266.85,0.18,10/15,766.00,-532.45,59.23,-1135.15
+B5_50,Hold to expiry,"₹50 strangle sold 5 days out, held to expiry",Sell nearest ₹50 call + put 5 trading days before expiry; buy back at the expiry-day close.,46,184.65,4.01,0.74,-793.00,-1509.45,0.12,10/15,1113.15,-928.50,99.17,-1979.00
+C1,ATM straddle,"ATM straddle, day before expiry",Sell the at-the-money call + put the day before expiry.,63,1396.45,22.17,0.68,-439.75,-594.90,2.35,13/15,324.95,1071.50,174.89,-1392.55
+C2,ATM straddle,"ATM straddle, last 2 days","ATM straddle, 1–2 days before expiry, overnight.",125,1991.00,15.93,0.65,-439.75,-753.35,2.64,11/15,247.30,1743.70,209.43,-2147.05
+C3,ATM straddle,"ATM straddle, every day","ATM straddle every day, overnight.",297,1678.80,5.65,0.66,-439.75,-1193.90,1.41,10/15,17.05,1661.75,270.63,-5209.25
+C4,ATM straddle,"ATM straddle sold 2 days out, held to expiry",Two nights to expiry.,62,948.70,15.30,0.65,-566.65,-1244.45,0.76,10/15,-596.95,1545.65,244.53,-3259.25
+D0.75,Vol-adaptive strikes,"Strikes 0.75× straddle away, last 2 days","Strikes placed 0.75 × the ATM straddle price away from spot, so distance widens when volatility is high.",125,2756.45,22.05,0.73,-400.10,-497.15,5.54,14/15,787.65,1968.80,92.83,-1449.25
+D1.0,Vol-adaptive strikes,"Strikes 1.0× straddle away, last 2 days","Strikes placed 1.0 × the ATM straddle price away from spot, so distance widens when volatility is high.",125,2450.30,19.60,0.78,-369.55,-406.95,6.02,13/15,822.70,1627.60,69.02,-1188.70
+D1.25,Vol-adaptive strikes,"Strikes 1.25× straddle away, last 2 days","Strikes placed 1.25 × the ATM straddle price away from spot, so distance widens when volatility is high.",125,2064.35,16.51,0.80,-378.75,-399.70,5.16,14/15,707.50,1356.85,51.37,-893.50
+D1.5,Vol-adaptive strikes,"Strikes 1.5× straddle away, last 2 days","Strikes placed 1.5 × the ATM straddle price away from spot, so distance widens when volatility is high.",125,1769.70,14.16,0.84,-343.15,-373.20,4.74,14/15,618.10,1151.60,38.35,-682.55
+D1.0all,Vol-adaptive strikes,"Strikes 1× straddle away, every day","Same, every day.",297,2119.30,7.14,0.73,-369.55,-802.60,2.64,10/15,560.85,1558.45,86.89,-3533.15
+E1,Hedged (iron condor),"₹30 strangle + ₹5 wings, last 2 days",Buy ~₹5 options further out on both sides as crash protection.,125,938.50,7.51,0.71,-254.55,-512.65,1.83,10/15,635.35,303.15,59.83,-1276.45
+E2,Hedged (iron condor),"₹30 strangle + ₹2 wings, last 2 days",Cheaper ~₹2 wings.,125,1229.10,9.83,0.74,-423.35,-487.25,2.52,10/15,696.60,532.50,59.83,-1436.85
+E3,Hedged (iron condor),"₹30 strangle + wings 200 pts out, last 2 days",Wings a fixed 200 points beyond each short strike.,125,657.70,5.26,0.71,-161.35,-365.85,1.80,10/15,460.95,196.75,59.83,-979.75
+E4,Hedged (iron condor),"₹30 strangle + wings 100 pts out, last 2 days",Tighter 100-point wings.,125,377.90,3.02,0.67,-73.80,-213.00,1.77,9/15,219.30,158.60,59.83,-516.95
+E5,Hedged (iron condor),"₹30 strangle + ₹5 wings, every day","₹5 wings, every day.",296,677.50,2.29,0.71,-254.55,-949.70,0.71,10/15,581.65,95.85,59.70,-2510.85
+E6,Hedged (calendar),"₹30 strangle hedged with next-week same strikes, last 2 days","Sell this week's ₹30 strikes, buy the same strikes in next week's expiry.",124,451.75,3.64,0.59,-129.80,-201.75,2.24,11/15,501.65,-49.90,59.83,-181.75
+F_vrp0.8,Filters,"₹30 last 2 days, only when implied ≥ 0.8× realised",Skip days when the ATM straddle is cheap relative to the last 10 days' actual moves (ratio < 0.8).,116,1540.80,13.28,0.75,-421.85,-477.85,3.22,11/15,746.25,794.55,59.91,-1207.00
+F_vrp1.0,Filters,"₹30 last 2 days, only when implied ≥ 1.0× realised",Skip days when the ATM straddle is cheap relative to the last 10 days' actual moves (ratio < 1.0).,91,1474.60,16.20,0.74,-245.15,-341.65,4.32,12/15,977.85,496.75,60.04,-735.35
+F_vrp1.2,Filters,"₹30 last 2 days, only when implied ≥ 1.2× realised",Skip days when the ATM straddle is cheap relative to the last 10 days' actual moves (ratio < 1.2).,53,865.05,16.32,0.74,-205.90,-240.25,3.60,8/13,508.95,356.10,59.77,-449.60
+F_vrplow,Filters,"₹30 last 2 days, only when implied < 1× realised","The opposite days, for comparison.",34,75.40,2.22,0.74,-421.85,-427.60,0.18,9/12,-127.30,202.70,59.27,-675.15
+F_prev150,Filters,"₹30 last 2 days, skip after a 150+ pt day",No entry if today's Nifty move exceeded 150 points.,70,915.70,13.08,0.69,-143.35,-214.50,4.27,10/15,499.25,416.45,59.75,-430.80
+F_prev250,Filters,"₹30 last 2 days, skip after a 250+ pt day",No entry if today's Nifty move exceeded 250 points.,99,1712.25,17.30,0.74,-203.50,-293.70,5.83,12/15,946.20,766.05,59.59,-668.65
+F_rv,Filters,"₹30 last 2 days, skip when 5-day avg move > 150",No entry in high-volatility weeks.,76,1067.15,14.04,0.70,-143.35,-221.30,4.82,10/12,749.85,317.30,59.87,-439.05
+F_nofri,Filters,₹30 day before expiry + Friday skipped,Last 2 days but no Friday (weekend) entries.,68,992.05,14.59,0.76,-421.85,-523.65,1.89,10/15,479.25,512.80,59.99,-1151.00
+G1,Intraday (open → close),"₹30 strangle at open, expiry day","Sell at the expiry-day opening price, buy back at that day's close.",63,1283.80,20.38,0.79,-173.90,-397.10,3.23,11/15,1118.20,165.60,58.45,-569.30
+G2,Intraday (open → close),"₹30 strangle at open, day before expiry","Same, day before expiry.",63,512.20,8.13,0.76,-85.95,-132.80,3.86,10/15,230.00,282.20,59.35,41.75
+G3,Intraday (open → close),"₹30 strangle at open, every day","Same, every day (nearest expiry after today).",297,1662.50,5.60,0.76,-170.40,-520.55,3.19,11/15,899.65,762.85,59.48,-780.85
+G4,Intraday (open → close),"₹15 strangle at open, expiry day",Cheaper strikes on expiry day.,63,964.20,15.30,0.87,-140.05,-223.75,4.31,11/15,859.65,104.55,29.39,-288.00
+G5,Intraday (open → close),"₹50 strangle at open, expiry day",Richer strikes on expiry day.,63,1216.55,19.31,0.67,-289.95,-550.40,2.21,10/15,1028.10,188.45,97.71,-775.60
+H1,OI-based strikes,"Highest-OI strikes, last 2 days",Sell at the call/put strikes with the most open interest (support/resistance).,125,327.10,2.62,0.76,-184.80,-360.80,0.91,8/15,193.05,134.05,31.62,-717.90
+H2,OI-based strikes,"Highest-OI strikes, every day","Same, every day.",297,1129.35,3.80,0.75,-184.80,-546.05,2.07,11/15,672.25,457.10,45.85,-1332.80
+I1,One side / trend,"₹30 call only, last 2 days",Only the call leg.,125,1066.90,8.54,0.83,-450.10,-566.80,1.88,12/15,558.30,508.60,30.24,-815.95
+I2,One side / trend,"₹30 put only, last 2 days",Only the put leg.,125,483.10,3.86,0.74,-238.35,-328.10,1.47,8/15,292.25,190.85,29.59,-594.55
+I3,One side / trend,"Sell with trend (5-day), last 2 days",Up-trend: sell put only; down-trend: sell call only.,125,1222.80,9.78,0.85,-450.10,-478.90,2.55,12/15,379.25,843.55,29.95,-446.45
+I4,One side / trend,"Sell against trend (5-day), last 2 days",Up-trend: sell call only; down-trend: sell put only.,125,327.20,2.62,0.73,-275.40,-478.95,0.68,10/15,471.30,-144.10,29.87,-964.05
+J1,Stop-loss,₹30 last 2 days + 3× stop,"Exit a leg if it trades at 3× entry (fill at the stop, or the open if it gapped past).",125,1060.40,8.48,0.63,-598.75,-703.25,1.51,12/15,-100.15,1160.55,59.83,-944.50
+J2,Stop-loss,₹30 held 2 days to expiry + 3× stop,Two-night hold with a 3× stop.,62,326.50,5.27,0.55,-769.85,-898.65,0.36,10/15,-466.65,793.15,59.94,-815.10
+J3,Stop-loss,₹50 held 5 days to expiry + 2× stop,Full-week hold with a 2× stop.,46,-49.00,-1.07,0.48,-500.55,-553.40,-0.09,12/15,-251.90,202.90,99.17,-670.90

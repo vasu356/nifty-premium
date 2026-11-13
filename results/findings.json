@@ -1,0 +1,12 @@
+{
+  "compare": "L30",
+  "points": [
+    "Your strategy (sell the ₹30 call and put every day, buy back next day) earned 4,838 pts of gross decay, but costs took 4,621 pts. That leaves +216 pts net, about ₹14,000 per 65-unit lot over almost six years, and only 2 of 6 years were profitable. An earlier, now-lost version of this backtest reported +1,639 pts; this rebuild uses stricter fills (only OTM strikes that actually traded), so +216 is the number to rely on.",
+    "Timing decides the result. The same ₹30 trade entered 1 day before expiry made +2,326 pts (74% winners), 2 days before made +896, and 3, 4 and 5 days before made −18, −1,527 and −1,436. Almost all the decay you can keep happens in the last two sessions.",
+    "Trading only the last 2 days before expiry turns the idea positive: ₹30 strangle +3,222 pts (5 of 6 years), ₹75 strangle +4,369, and the ATM straddle +5,774 with all 6 years profitable. Fewer trades also means far lower costs.",
+    "Your strategy's losses come from big nights. Days when Nifty moved under 150 pts made +14,916 pts; the 34% of trades on days with a 150+ pt move lost −14,700, including −10,792 on 117 nights of 300+ pts.",
+    "Costs are the deciding factor for daily selling: at 0.5 pt slippage per order plus ₹20 brokerage they consume 96% of the gross decay. Each extra 0.25 pt of slippage costs the daily strategy about 1,150 pts, against about 350 pts for the last-2-days version.",
+    "Protection did not help. Buying ₹5 wings every day turned the strategy into −6,551 pts. A 2× stop-loss made +1,393 pts with realistic gap fills; it shows +4,363 only if every stop filled exactly at 2×, which overnight gaps make impossible.",
+    "2026 covers January to 12 November only."
+  ]
+}

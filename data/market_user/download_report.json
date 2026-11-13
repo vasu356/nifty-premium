@@ -1,0 +1,99 @@
+{
+  "generated": "2026-11-13 21:34",
+  "symbol": "NIFTY 50",
+  "exchange": "NSE",
+  "token": "99926000",
+  "requested_start": "2021-01-01",
+  "requested_end": "2026-11-13",
+  "intervals": {
+    "1day": {
+      "rows": 1455,
+      "first": "2021-01-01 00:00:00",
+      "last": "2026-11-13 00:00:00",
+      "trading_days": 1455,
+      "bad_ohlc_rows": 0
+    },
+    "1hour": {
+      "rows": 10141,
+      "first": "2021-01-01 09:15:00",
+      "last": "2026-11-13 15:15:00",
+      "trading_days": 1455,
+      "candles_per_day_typical": 7,
+      "days_missing_vs_daily": [],
+      "days_extra_vs_daily": [],
+      "bad_ohlc_rows": 0
+    },
+    "30min": {
+      "rows": 18830,
+      "first": "2021-01-01 09:15:00",
+      "last": "2026-11-13 15:15:00",
+      "trading_days": 1455,
+      "candles_per_day_typical": 13,
+      "days_missing_vs_daily": [],
+      "days_extra_vs_daily": [],
+      "bad_ohlc_rows": 0
+    },
+    "15min": {
+      "rows": 36206,
+      "first": "2021-01-01 09:15:00",
+      "last": "2026-11-13 15:15:00",
+      "trading_days": 1455,
+      "candles_per_day_typical": 25,
+      "days_missing_vs_daily": [],
+      "days_extra_vs_daily": [],
+      "bad_ohlc_rows": 0
+    },
+    "10min": {
+      "rows": 54970,
+      "first": "2021-01-01 09:15:00",
+      "last": "2026-11-13 15:25:00",
+      "trading_days": 1455,
+      "candles_per_day_typical": 38,
+      "days_missing_vs_daily": [],
+      "days_extra_vs_daily": [],
+      "bad_ohlc_rows": 0
+    },
+    "5min": {
+      "rows": 108468,
+      "first": "2021-01-01 09:15:00",
+      "last": "2026-11-13 15:25:00",
+      "trading_days": 1455,
+      "candles_per_day_typical": 75,
+      "days_missing_vs_daily": [],
+      "days_extra_vs_daily": [],
+      "bad_ohlc_rows": 0
+    },
+    "3min": {
+      "rows": 180721,
+      "first": "2021-01-01 09:15:00",
+      "last": "2026-11-13 15:27:00",
+      "trading_days": 1455,
+      "candles_per_day_typical": 125,
+      "days_missing_vs_daily": [],
+      "days_extra_vs_daily": [],
+      "bad_ohlc_rows": 0
+    },
+    "1min": {
+      "rows": 541971,
+      "first": "2021-01-01 09:15:00",
+      "last": "2026-11-13 15:28:00",
+      "trading_days": 1455,
+      "candles_per_day_typical": 375,
+      "days_missing_vs_daily": [],
+      "days_extra_vs_daily": [],
+      "short_days_lt_300_candles": {
+        "2021-02-24": 129,
+        "2021-11-04": 61,
+        "2022-10-24": 60,
+        "2023-11-12": 60,
+        "2024-03-02": 116,
+        "2024-05-18": 105,
+        "2024-11-01": 60,
+        "2025-10-21": 72,
+        "2026-11-08": 56
+      },
+      "bad_ohlc_rows": 0
+    }
+  },
+  "failed_chunks": {}
+}
