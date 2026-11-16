@@ -51,3 +51,9 @@ To test a new idea, add a `Strategy(...)` line to `STRATEGIES` in
 - `scripts/16_pattern_strategies.py` tests of open-price exits, VIX filters/scaling and conditional performance.
 - `scripts/08_strategy_lab.py`, `09_run_lab.py`, `10_search.py`, `11_walkforward.py`, `12_dte3.py`, `13_formula_lab.py`
   are the strategy lab and the search scripts. Results are in `results/manual/`.
+
+## Range / direction forecasting study (Nov 2026)
+- `scripts/17_extra_day_dataset.py`, `18_signal_scan.py`, `19_trend_filter.py`, `20_walkforward_models.py`: extra days (Tue/Wed/Thu) are not reliably profitable even with trend filters or ML models.
+- `scripts/21_range_forecast.py`: next-day move size is only weakly predictable (R2 ~0.09); VIX overstates realised moves (the premium we collect).
+- `scripts/22_range_strategies.py`: strikes from a forecast range perform the same as the straddle-based formula at equal premium.
+- `scripts/23_ratio_and_lean.py`: two modest signals for the Fri/Mon trades: option-implied vs VIX-implied move (richness ratio) and a last-hour-move lean on the strike centre.
