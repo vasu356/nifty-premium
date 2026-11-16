@@ -57,3 +57,9 @@ To test a new idea, add a `Strategy(...)` line to `STRATEGIES` in
 - `scripts/21_range_forecast.py`: next-day move size is only weakly predictable (R2 ~0.09); VIX overstates realised moves (the premium we collect).
 - `scripts/22_range_strategies.py`: strikes from a forecast range perform the same as the straddle-based formula at equal premium.
 - `scripts/23_ratio_and_lean.py`: two modest signals for the Fri/Mon trades: option-implied vs VIX-implied move (richness ratio) and a last-hour-move lean on the strike centre.
+
+## Sep 2025 -> now deep study (Tuesday-expiry era only)
+- `scripts/25_p2_lab.py` flexible engine (overnight or hold-to-expiry, intrinsic settlement, close-based stops, wings, one-sided, next-week).
+- `scripts/26_p2_grid_strikes.py`, `27_p2_families.py` grids; `28_p2_portfolios.py` weekly plans (output in results/manual/p2_portfolios.txt).
+- Findings: Friday (2 days before expiry) overnight has a very small loss tail -> candidate for 2 lots; Thursday close -> Tuesday expiry hold is
+  positive in this era (promising, not proven in older data); premium targets, wings, extra overnight days, next-week expiries do not help.
