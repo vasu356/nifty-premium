@@ -11,12 +11,50 @@ Days are counted in **trading days before expiry**, so holidays move the trade d
 | 2 | Friday | Formula strangle, overnight |
 | 1 | Monday | Formula strangle, into expiry |
 
-All entries are at the **close**, around 3:20 to 3:25 PM. The backtest used NSE's official closing prices, which are the
-average of the last 30 minutes, so live prices will differ a little.
+## Timing: market rules changed in 2026 (researched 17 Nov 2026)
 
-## Step 0: two numbers to read at about 3:20 PM
+NSE now ends the cash market with a **closing auction session (CAS)**. Nifty's official close is computed from the auction,
+so it is only known after the auction ends, after you have already traded. Secondary sources agree on the timings below;
+the NSE circulars could not be opened from this session, so check them in your broker app.
 
-1. **Nifty** (the spot index level now).
+| | **Now, until Fri 4 Dec 2026** (since 3 Aug 2026) | **From Mon 7 Dec 2026** |
+|---|---|---|
+| Normal trading in Nifty stocks (live Nifty updates) | until **3:15 PM** | until **3:30 PM** |
+| Closing auction (Nifty frozen, then jumps to the auction close) | 3:15 to about 3:35 PM | 3:30 to 3:40 PM, matching 3:40 to 3:45 |
+| F&O trading ends | **3:40 PM** | **3:45 PM** (expiry day: contracts expiring that day stop at **3:30 PM**) |
+| Option "closing price" used in our data | average of 3:10 to 3:40 PM | an average of the last 30 minutes (window not confirmed) |
+| Expiry settlement of index options | Nifty's auction-based close (most sources) | **30-minute average of normal trading** (auction price no longer used) |
+
+**What the backtest says about which Nifty value to use** (`scripts/35_reference_timing.py`, Fri/Mon formula, net points):
+
+| Nifty value used to choose strikes | Sep 2025 to Jul 2026 | Since 3 Aug 2026 |
+|---|---|---|
+| Live Nifty at 3:10 to 3:14 PM | +2,087 to +2,163 | +168 to +203 |
+| Official close (used in the backtest; not knowable in time) | +2,133 | +624 |
+| Options-implied Nifty (ATM strike + call − put) | +1,719 | +11 |
+
+- **Before the auction era,** reading live Nifty at 3:10 to 3:20 PM gives the same result as the backtest.
+- **Since 3 Aug,** the backtest figure is optimistic; the realistic result for Aug to Nov 2026 is about +170 to +250 over 27 trades.
+- **Far puts** are not affected by which Nifty value you use.
+- **Don't use the options-implied Nifty.**
+
+### Daily timing
+
+**Now, until 4 Dec 2026:**
+1. **3:10 to 3:14 PM:** read live Nifty and S (the ATM call + put of the nearest expiry). Work out the strikes.
+2. **3:15 to 3:35 PM:** sell, with limit orders near the middle of the bid and ask. Option prices keep trading normally during the auction, but Nifty is frozen until the auction close.
+3. **Expiry Tuesday:** settlement is at the auction close, which can jump. Some days it has been 100 to 400 points away from 3:15 PM. If a short leg is within about 100 points of Nifty, or in the money, at 3:00 PM, buy it back before 3:15 PM rather than leave it to the auction.
+
+**From Mon 7 Dec 2026:**
+1. **3:20 to 3:28 PM:** read live Nifty and S, and work out the strikes.
+2. **3:25 to 3:40 PM:** sell the new positions. F&O runs until 3:45 PM.
+3. **Expiry Tuesday:** the expiring contracts stop at 3:30 PM and settle on a 30-minute average, which is smoother. If you want to buy back a leg, do it before 3:30 PM.
+
+**For the 5-day trend term:** use the official Nifty close of the day 5 trading days back, from NSE or your broker's daily chart.
+
+## Step 0: two numbers to read (see Timing above)
+
+1. **Nifty** (the live spot index level, at the time given in the Timing section).
 2. **S, the ATM straddle of the nearest expiry**: the Nifty strike nearest to spot, call premium + put premium.
    - Example from 12 Nov 2026: Nifty 25,299.35, ATM 25300, call 174.85 + put 190.35, so **S = 365.2**.
 
