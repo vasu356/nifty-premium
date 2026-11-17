@@ -70,3 +70,9 @@ To test a new idea, add a `Strategy(...)` line to `STRATEGIES` in
 - `scripts/31_buy_any_day.py`: long ATM straddle / strangle bought on every weekday.
 - Result: no reliable edge. Straddles ~break-even at next close (needs a ~150 pt Nifty move); call-only/put-only results flip sign between eras
   (market direction, not an edge); no condition (VIX, cheapness vs realised, range, gap, trend) is consistent across eras.
+
+## Mid-week far-OTM put selling (Nov 2026)
+- `scripts/32_decay_map.py`, `33_decay_map_read.py`: leg-level decay map (Tue/Wed/Thu entries, call/put, 0.25-3x straddle away, every holding length).
+- `scripts/34_midweek_portfolio.py`: plans combining the Fri/Mon formula with far puts; chart `results/charts/midweek_put_equity.png`.
+- Finding: a put sold ~2.5x the ATM straddle below Nifty (about 3.5% OTM, Rs 10 premium) and held to expiry was positive in every year
+  2021-2026 for every entry day; ~97% expire worthless. Overnight exits and near-the-money strikes on these days do not work.
