@@ -76,3 +76,9 @@ To test a new idea, add a `Strategy(...)` line to `STRATEGIES` in
 - `scripts/34_midweek_portfolio.py`: plans combining the Fri/Mon formula with far puts; chart `results/charts/midweek_put_equity.png`.
 - Finding: a put sold ~2.5x the ATM straddle below Nifty (about 3.5% OTM, Rs 10 premium) and held to expiry was positive in every year
   2021-2026 for every entry day; ~97% expire worthless. Overnight exits and near-the-money strikes on these days do not work.
+
+## Which Nifty value to use, closing-auction era (Nov 2026)
+- `scripts/36_reference_minute_test.py`: strikes picked from live Nifty at 14:30-15:29, the 15:00-15:14 average, the official close and the
+  options-implied level; three eras (2021-Aug25, Sep25-Jul26, Aug 3 2026+). Live readings from 15:05 on match the official close before the
+  auction; since 3 Aug the last live reading is 15:14. Options-implied readings are worst in every era.
+- `scripts/37_grid_live_reading.py`: multiplier grid using the 15:14 reading. Call 0.5xS (instead of 0.75xS) helps on Mondays in every era.
