@@ -25,29 +25,38 @@ the NSE circulars could not be opened from this session, so check them in your b
 | Option "closing price" used in our data | average of 3:10 to 3:40 PM | an average of the last 30 minutes (window not confirmed) |
 | Expiry settlement of index options | Nifty's auction-based close (most sources) | **30-minute average of normal trading** (auction price no longer used) |
 
-**What the backtest says about which Nifty value to use** (`scripts/35_reference_timing.py`, Fri/Mon formula, net points):
+**What the backtest says about which Nifty value to use** (`scripts/36_reference_minute_test.py`, Fri/Mon formula, net points):
 
-| Nifty value used to choose strikes | Sep 2025 to Jul 2026 | Since 3 Aug 2026 |
-|---|---|---|
-| Live Nifty at 3:10 to 3:14 PM | +2,087 to +2,163 | +168 to +203 |
-| Official close (used in the backtest; not knowable in time) | +2,133 | +624 |
-| Options-implied Nifty (ATM strike + call − put) | +1,719 | +11 |
+| Nifty value used to choose strikes | 2021 to Aug 2025 | Sep 2025 to Jul 2026 | Since 3 Aug 2026 (29 trades) |
+|---|---|---|---|
+| Live Nifty at 2:30 PM | +4,115 | +1,458 | +249 |
+| Live Nifty at 3:00 PM | +4,152 | +1,914 | +252 |
+| Live Nifty at 3:05 to 3:14 PM | +4,397 to +5,242 | +2,087 to +2,181 | +137 to +272 |
+| Live Nifty at 3:20 to 3:29 PM (not available since Aug) | +5,260 to +5,483 | +1,825 to +2,104 | — |
+| Official close (backtest; known only after you trade) | +5,011 | +2,133 | +624 |
+| Options-implied Nifty (ATM strike + call − put) | +4,615 | +1,719 | +11 |
 
-- **Before the auction era,** reading live Nifty at 3:10 to 3:20 PM gives the same result as the backtest.
-- **Since 3 Aug,** the backtest figure is optimistic; the realistic result for Aug to Nov 2026 is about +170 to +250 over 27 trades.
-- **Far puts** are not affected by which Nifty value you use.
-- **Don't use the options-implied Nifty.**
+- **Read Nifty as late as possible while it is still live.** Readings from 3:05 PM on match the official close in both older periods;
+  readings at 2:30 to 3:00 PM are clearly worse.
+- **Since 3 Aug, the last live reading is 3:14 PM.** Live Nifty stops then, and the next print is the auction close at about 3:28 to 3:29.
+  The backtest's +624 for that period used a close you can't know in time; realistically it was about +140 to +270.
+- **Don't use the options-implied Nifty.** It is the worst in every period: picking strikes from the same prices you sell at tilts you
+  towards the relatively cheaper side.
+- **Far puts** don't depend on which reading you use (they're too far away).
+- **Why Aug to Nov 2026 was weak:** more big moves (31% of nights moved more than S, against 21% before), mostly in Oct 2026.
+  Monday trades made only +1 per trade, against +30 before. The auction itself had a small net effect on expiry day
+  (+29 points over 15 Mondays). The far puts were about break-even since Aug (+15 to +25 over 28 trades).
 
 ### Daily timing
 
 **Now, until 4 Dec 2026:**
-1. **3:10 to 3:14 PM:** read live Nifty and S (the ATM call + put of the nearest expiry). Work out the strikes.
+1. **3:12 to 3:14 PM:** read live Nifty and S (the ATM call + put of the nearest expiry). Work out the strikes.
 2. **3:15 to 3:35 PM:** sell, with limit orders near the middle of the bid and ask. Option prices keep trading normally during the auction, but Nifty is frozen until the auction close.
 3. **Expiry Tuesday:** settlement is at the auction close, which can jump. Some days it has been 100 to 400 points away from 3:15 PM. If a short leg is within about 100 points of Nifty, or in the money, at 3:00 PM, buy it back before 3:15 PM rather than leave it to the auction.
 
 **From Mon 7 Dec 2026:**
-1. **3:20 to 3:28 PM:** read live Nifty and S, and work out the strikes.
-2. **3:25 to 3:40 PM:** sell the new positions. F&O runs until 3:45 PM.
+1. **3:25 to 3:29 PM:** read live Nifty and S, and work out the strikes.
+2. **3:30 to 3:40 PM:** sell the new positions. F&O runs until 3:45 PM.
 3. **Expiry Tuesday:** the expiring contracts stop at 3:30 PM and settle on a 30-minute average, which is smoother. If you want to buy back a leg, do it before 3:30 PM.
 
 **For the 5-day trend term:** use the official Nifty close of the day 5 trading days back, from NSE or your broker's daily chart.
@@ -80,19 +89,25 @@ Strikes are in steps of 50. Round to the nearest 50; if exactly halfway, take th
 - **Wed 11 Nov 2026:** Nifty 25,255.05, S = 465.1. Target 25,255 − 1,163 = 24,092, so **sell 24100 PE at ₹10.15**.
 - **Thu 12 Nov 2026:** Nifty 25,299.35, S = 365.2. Target 25,299 − 913 = 24,386, so **sell 24400 PE at ₹5.85**.
 
-## B. Friday and Monday formula strangle (unchanged)
+## B. Friday and Monday formula strangle
 
 1. **Trend centre** = Nifty + 0.15 × (Nifty now − Nifty close 5 trading days ago).
-2. **Call strike** = centre + 0.75 × S. **Put strike** = centre − 1.0 × S. Round each to the nearest 50.
+2. **Friday:** call strike = centre + **0.75** × S. Put strike = centre − 1.0 × S. Round each to the nearest 50.
+   **Monday:** call strike = centre + **0.5** × S (slightly closer). Put strike = centre − 1.0 × S.
+   - Why Monday is different (`scripts/37_grid_live_reading.py`, strikes from live 3:14 PM Nifty): the closer Monday call gained
+     +479, +157 and +114 points in the three periods (2021 to Aug 2025, Sep 2025 to Jul 2026, since Aug 2026), and +724 overall over 610 trades,
+     with a 96% chance the gain is real. On Fridays it made no difference. The cost is a slightly deeper drawdown (−731 against −641).
 3. **Sell 1 lot of each.**
    - **Friday's position:** buy both back at Monday's close, even at a small loss. Testing showed that holding a losing Friday position into Tuesday made things worse.
    - **Monday's position:** sell at the close and hold into Tuesday's expiry. If a leg is in the money near the close, buy it back.
 
-**Worked example, Fri 13 Nov 2026:**
-- Nifty 25,144.3. The close 5 trading days earlier (6 Nov) was 25,030.35, so centre = 25,144.3 + 0.15 × 113.95 = **25,161.4**.
+**Worked example, Fri 13 Nov 2026** (S uses NSE closing prices, since we don't have the 3:14 PM option prices):
+- Live Nifty at 3:14 PM was 25,139.95. The official close 5 trading days earlier (6 Nov) was 25,030.35,
+  so centre = 25,139.95 + 0.15 × 109.6 = **25,156.4**.
 - S = 136.85 + 135.95 = 272.8.
-- Call target 25,161.4 + 204.6 = 25,366 → **sell 25350 CE at ₹62**.
-- Put target 25,161.4 − 272.8 = 24,889 → **sell 24900 PE at ₹46.8**.
+- Call target 25,156.4 + 204.6 = 25,361 → **sell 25350 CE at ₹62**.
+- Put target 25,156.4 − 272.8 = 24,884 → **sell 24900 PE at ₹46.8**.
+- On a Monday the call target would be centre + 0.5 × S instead.
 
 ## C. Weekly picture and sizing
 
