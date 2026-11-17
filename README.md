@@ -63,3 +63,10 @@ To test a new idea, add a `Strategy(...)` line to `STRATEGIES` in
 - `scripts/26_p2_grid_strikes.py`, `27_p2_families.py` grids; `28_p2_portfolios.py` weekly plans (output in results/manual/p2_portfolios.txt).
 - Findings: Friday (2 days before expiry) overnight has a very small loss tail -> candidate for 2 lots; Thursday close -> Tuesday expiry hold is
   positive in this era (promising, not proven in older data); premium targets, wings, extra overnight days, next-week expiries do not help.
+
+## Option BUYING test (Nov 2026)
+- `scripts/29_buy_after_expiry.py` + `30_buy_analysis.py`: buy at expiry-day close (Tue since Sep 2025, Thu before), next-week or week-after expiry,
+  ITM/ATM/OTM by straddle multiples and premium targets, call+put / call / put, exits next open / next close / 2 days. Net of 1 pt per leg.
+- `scripts/31_buy_any_day.py`: long ATM straddle / strangle bought on every weekday.
+- Result: no reliable edge. Straddles ~break-even at next close (needs a ~150 pt Nifty move); call-only/put-only results flip sign between eras
+  (market direction, not an edge); no condition (VIX, cheapness vs realised, range, gap, trend) is consistent across eras.
