@@ -82,3 +82,9 @@ To test a new idea, add a `Strategy(...)` line to `STRATEGIES` in
   options-implied level; three eras (2021-Aug25, Sep25-Jul26, Aug 3 2026+). Live readings from 15:05 on match the official close before the
   auction; since 3 Aug the last live reading is 15:14. Options-implied readings are worst in every era.
 - `scripts/37_grid_live_reading.py`: multiplier grid using the 15:14 reading. Call 0.5xS (instead of 0.75xS) helps on Mondays in every era.
+
+## Final realistic grid (data to 23 Nov 2026)
+- Data refreshed with `01_download.py` / `02_build.py` (to 2026-11-23) and Yahoo 1-minute bars for 16-23 Nov
+  (`data/market/nifty_1min_combined.csv` = user 1-min file + Yahoo for the new days; matches within ~1 point on overlap days).
+- `scripts/38_final_grid.py` / `39_final_read.py`: strikes from the live 15:14 Nifty for every component and variant.
+- `scripts/40_final_plans.py`: month-wise progress from Sep 2025 for complete weekly plans; chart `results/charts/final_plans_equity.png`.
