@@ -117,8 +117,19 @@ Strikes are in steps of 50. Round to the nearest 50; if exactly halfway, take th
   - The worst full week for the formula plus far puts was **−694 points**, about **₹45,000 per lot**, from 26 Sep to 3 Oct 2024.
   - A single far put once went from ₹9 to ₹409 mid-week (Apr 2025) before recovering.
   - There has been no 2020-style crash since 2021, so a true crash could cost much more.
-- **Start with Wed and Thu puts plus Fri and Mon, 1 lot each.** That's plan D: +3,834 points since Sep 2025, against +2,877 for the formula alone.
+- **Start with Wed and Thu puts plus Fri and Mon, 1 lot each** (plan C). Realistic backtest, strikes from the live 3:14 PM Nifty,
+  1 Sep 2025 to 23 Nov 2026 (`scripts/40_final_plans.py`):
+
+  | Plan | Net points | ₹ at 65 units | Worst week | Months positive | Since 3 Aug 2026 |
+  |---|---|---|---|---|---|
+  | A original (Fri + Mon 0.75 / 1.0) | +2,135 | ₹1.39L | −426 | 12/15 | −13 |
+  | B Fri 0.75 + Mon call 0.5 | +2,330 | ₹1.51L | −459 | 12/15 | +64 |
+  | **C = B + far puts Wed, Thu** | **+3,287** | **₹2.14L** | −433 | 12/15 | +109 |
+  | D = C + far put Tue | +3,763 | ₹2.45L | −419 | 12/15 | +215 |
+
   Add the Tuesday put only after a few months, if margin allows.
+- **Holiday weeks shift every trade one day earlier.** Example: Tue 24 Nov 2026 was a holiday, so expiry was Mon 23 Nov.
+  The Friday-type trade (2 days before expiry) was placed on Thu 19 Nov, and the Monday-type trade (1 day before) on Fri 20 Nov.
 - **Check HDFC Sky's margin** for a naked far-OTM put before starting. It needs its own margin per lot.
 - **Charges:** the backtest assumed ₹65 per leg per lot. With far puts at only ₹6 to ₹10, a bad fill of ₹0.5 to ₹1 matters.
   Use limit orders near the mid price.
